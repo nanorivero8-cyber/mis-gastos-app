@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mis Gastos">
+  <meta name="theme-color" content="#16233E">
+  <link rel="manifest" href="manifest.json">
+  <title>Mis Gastos</title>
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500&family=Plus+Jakarta+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+    <header class="app-header">
+      <div class="mes-selector" id="mesSelector">
+        <span id="mesActual">Julio 2026</span>
+        <span class="material-symbols-rounded icon-sm">expand_more</span>
+      </div>
+      <button class="btn-tema" id="btnTema" aria-label="Cambiar tema">
+        <span class="material-symbols-rounded icon-sm" id="iconoTema">dark_mode</span>
+      </button>
+    </header>
+
+    <main id="contenido">
+      <div id="vistaInicio" class="vista vista-tab">
+        <div class="balance-card">
+          <p class="label-muted">Tu gasto real del mes</p>
+          <p class="monto-grande" id="montoNeto">$ --</p>
+          <p class="detalle-chico" id="detalleBruto">cargando...</p>
+        </div>
+
+        <div class="stats-grid" id="statsGrid"></div>
+
+        <div class="stat-card" id="cardPendienteCobro" style="display:none;margin-bottom:20px;">
+          <p class="stat-label">Te deben (pendiente de cobro)</p>
+          <p class="stat-valor positivo" id="montoPendienteCobro">$ --</p>
+        </div>
+
+        <div class="seccion-categorias">
+          <p class="titulo-seccion">Por categoria</p>
+          <div id="listaCategorias" class="lista-categorias"></div>
+        </div>
+
+        <button type="button" class="btn-secundario" id="btnVerCuotas">
+          <span class="material-symbols-rounded icon-sm" style="vertical-align:-3px;">calendar_month</span>
+          Cuotas a futuro
+        </button>
+      </div>
+
+      <div id="vistaCargando" class="vista-cargando">
+        <span class="material-symbols-rounded icon-spin">progress_activity</span>
+      </div>
+
+      <div id="vistaAgregar" class="vista" style="display:none;">
+        <div class="header-subvista">
+          <button type="button" class="btn-cerrar" id="btnCerrarAgregar" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+          <p class="titulo-subvista">Nuevo gasto</p>
+          <div style="width:36px;"></div>
+        </div>
+
+        <form id="formAgregar" class="form-gasto">
+          <label class="campo-label">Tipo</label>
+          <div class="chips-tipo" id="chipsTipo">
+            <button type="button" class="chip-tipo" data-tipo="Fijo">Fijo</button>
+            <button type="button" class="chip-tipo" data-tipo="Variable">Variable</button>
+            <button type="button" class="chip-tipo" data-tipo="Ahorro">Ahorro</button>
+            <button type="button" class="chip-tipo" data-tipo="Ingreso">Ingreso</button>
+          </div>
+
+          <label class="campo-label">Categoria</label>
+          <button type="button" class="campo-selector" id="btnCategoria">
+            <span class="selector-icono material-symbols-rounded" id="iconoCategoriaSel">category</span>
+            <span class="selector-texto" id="textoCategoriaSel">Elegir categoria</span>
+            <span class="material-symbols-rounded selector-chevron">chevron_right</span>
+          </button>
+
+          <div id="filaSubcategoria" style="display:none;">
+            <label class="campo-label">Subcategoria</label>
+            <button type="button" class="campo-selector" id="btnSubcategoria">
+              <span class="selector-texto" id="textoSubcategoriaSel">Elegir subcategoria</span>
+              <span class="material-symbols-rounded selector-chevron">chevron_right</span>
+            </button>
+          </div>
+
+          <label class="campo-label">Monto</label>
+          <input type="text" id="inputMonto" inputmode="decimal" placeholder="0" class="input-monto" required>
+
+          <label class="campo-label">Descripcion</label>
+          <input type="text" id="inputDescripcion" placeholder="Ej: Supermercado del sabado">
+
+          <label class="campo-label">Comercio (opcional)</label>
+          <input type="text" id="inputComercio" placeholder="Ej: Carrefour">
+
+          <label class="campo-label">Fecha</label>
+          <input type="date" id="inputFecha">
+
+          <label class="campo-label">Medio de pago</label>
+          <select id="selectMedioPago">
+            <option value="Efectivo">Efectivo</option>
+            <option value="Tarjeta debito">Tarjeta debito</option>
+            <option value="Tarjeta credito">Tarjeta credito</option>
+            <option value="Transferencia">Transferencia</option>
+          </select>
+
+          <label class="check-row">
+            <input type="checkbox" id="checkRecurrente">
+            <span>Es un gasto fijo recurrente</span>
+          </label>
+
+          <button type="submit" class="btn-guardar" id="btnGuardarGasto">Guardar gasto</button>
+        </form>
+      </div>
+
+      <div id="vistaGrupos" class="vista vista-tab" style="display:none;">
+        <div class="header-tab">
+          <p class="titulo-subvista" style="margin:0;">Grupos</p>
+          <button type="button" class="btn-cerrar" id="btnNuevoGrupo" aria-label="Nuevo grupo">
+            <span class="material-symbols-rounded">add</span>
+          </button>
+        </div>
+
+        <div id="listaGruposTab"></div>
+      </div>
+
+      <div id="vistaCategorias" class="vista vista-tab" style="display:none;">
+        <div class="header-tab">
+          <p class="titulo-subvista" style="margin:0;">Categorias</p>
+          <button type="button" class="btn-cerrar" id="btnNuevaCategoria" aria-label="Nueva categoria">
+            <span class="material-symbols-rounded">add</span>
+          </button>
+        </div>
+
+        <div id="listaCategoriasTab"></div>
+      </div>
+
+      <div id="vistaEscanear" class="vista" style="display:none;">
+        <div class="header-subvista">
+          <button type="button" class="btn-cerrar" id="btnCerrarEscanear" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+          <p class="titulo-subvista">Escanear ticket</p>
+          <div style="width:36px;"></div>
+        </div>
+
+        <div id="panelElegirFoto" class="panel-elegir-foto" style="flex-direction:column;gap:12px;">
+          <label class="btn-elegir-foto" for="inputFotoCamara">
+            <span class="material-symbols-rounded" style="font-size:32px;">photo_camera</span>
+            <span>Sacar foto</span>
+          </label>
+          <input type="file" id="inputFotoCamara" accept="image/*" capture="environment" style="display:none;">
+
+          <label class="btn-elegir-foto" for="inputFotoGaleria">
+            <span class="material-symbols-rounded" style="font-size:32px;">photo_library</span>
+            <span>Elegir de galeria</span>
+          </label>
+          <input type="file" id="inputFotoGaleria" accept="image/*" style="display:none;">
+        </div>
+
+        <div id="panelCargandoTicket" class="vista-cargando" style="display:none;">
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <span class="material-symbols-rounded icon-spin">progress_activity</span>
+            <p class="label-muted" style="margin-top:8px;">Leyendo el ticket...</p>
+          </div>
+        </div>
+
+        <div id="panelConfirmarTicket" style="display:none;">
+          <label class="campo-label">Comercio</label>
+          <input type="text" id="inputComercioTicket">
+
+          <label class="campo-label">Fecha</label>
+          <input type="date" id="inputFechaTicket">
+
+          <label class="campo-label">Medio de pago</label>
+          <select id="selectMedioPagoTicket">
+            <option value="Efectivo">Efectivo</option>
+            <option value="Tarjeta debito">Tarjeta debito</option>
+            <option value="Tarjeta credito">Tarjeta credito</option>
+            <option value="Transferencia">Transferencia</option>
+          </select>
+
+          <div class="fila-total-items">
+            <span class="titulo-seccion" style="margin:0;">Items</span>
+            <span class="label-muted" id="totalItemsTicket"></span>
+          </div>
+
+          <div id="listaItemsTicket"></div>
+
+          <button type="button" class="btn-secundario" id="btnAgregarItemTicket">
+            <span class="material-symbols-rounded icon-sm" style="vertical-align:-3px;">add</span>
+            Agregar item
+          </button>
+
+          <button type="button" class="btn-guardar" id="btnGuardarTicket">Guardar ticket</button>
+        </div>
+      </div>
+
+      <div id="vistaDetalleGrupo" class="vista" style="display:none;">
+        <div class="header-subvista">
+          <button type="button" class="btn-cerrar" id="btnCerrarDetalleGrupo" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+          <p class="titulo-subvista" id="tituloDetalleGrupo">Grupo</p>
+          <button type="button" class="btn-cerrar" id="btnEliminarGrupo" aria-label="Eliminar grupo">
+            <span class="material-symbols-rounded" style="color:var(--rojo);">delete</span>
+          </button>
+        </div>
+
+        <p class="titulo-seccion">Saldos</p>
+        <div id="listaSaldosGrupo" style="margin-bottom:18px;"></div>
+
+        <div id="seccionSugeridas" style="display:none;">
+          <p class="titulo-seccion">Para saldar todo</p>
+          <div id="listaSugeridasGrupo" style="margin-bottom:18px;"></div>
+        </div>
+
+        <div class="fila-total-items">
+          <span class="titulo-seccion" style="margin:0;">Gastos</span>
+        </div>
+        <div id="listaGastosGrupo" style="margin-bottom:10px;"></div>
+
+        <button type="button" class="btn-secundario" id="btnNuevoGastoGrupo">
+          <span class="material-symbols-rounded icon-sm" style="vertical-align:-3px;">add</span>
+          Agregar gasto
+        </button>
+      </div>
+      <div id="vistaCuotas" class="vista" style="display:none;">
+        <div class="header-subvista">
+          <button type="button" class="btn-cerrar" id="btnCerrarCuotas" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+          <p class="titulo-subvista">Cuotas a futuro</p>
+          <button type="button" class="btn-cerrar" id="btnNuevaCompraCuotas" aria-label="Nueva compra en cuotas">
+            <span class="material-symbols-rounded">add</span>
+          </button>
+        </div>
+
+        <div id="seccionComprasActivas" style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <p class="titulo-seccion" style="margin:0;">Tus compras en cuotas</p>
+            <button type="button" id="btnConfigRecargo" style="background:none;border:none;color:var(--celeste);font-size:12px;font-family:var(--font-body);cursor:pointer;padding:0;">
+              Recargo: <span id="textoRecargoActual">0%</span>
+            </button>
+          </div>
+          <div id="listaComprasCuotas"></div>
+        </div>
+
+        <p class="titulo-seccion">Proyeccion mes a mes</p>
+        <div id="listaCuotas"></div>
+      </div>
+    </main>
+
+    <div id="modalConfigRecargo" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo">Recargo bancario</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarModalRecargo" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <p class="label-muted" style="margin-bottom:10px;">Se aplica a todas las cuotas pendientes por igual, sin importar la compra.</p>
+        <label class="campo-label">Recargo (%)</label>
+        <input type="text" inputmode="decimal" id="inputConfigRecargo" placeholder="0">
+        <button type="button" class="btn-guardar" id="btnGuardarRecargo">Guardar</button>
+      </div>
+    </div>
+
+    <div id="modalNuevaCompraCuotas" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo">Nueva compra en cuotas</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarModalCompraCuotas" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+
+        <label class="campo-label">Descripcion</label>
+        <input type="text" id="inputDescripcionCompraCuotas" placeholder="Ej: Heladera">
+
+        <label class="campo-label">Categoria</label>
+        <button type="button" class="campo-selector" id="btnCategoriaCompraCuotas">
+          <span class="selector-icono material-symbols-rounded" id="iconoCategoriaCompraCuotas">category</span>
+          <span class="selector-texto" id="textoCategoriaCompraCuotas">Elegir categoria</span>
+          <span class="material-symbols-rounded selector-chevron">chevron_right</span>
+        </button>
+
+        <label class="campo-label">Monto total de la compra</label>
+        <input type="text" inputmode="decimal" id="inputMontoTotalCompraCuotas" placeholder="0">
+
+        <label class="campo-label">Cantidad de cuotas</label>
+        <input type="number" id="inputCantidadCuotasCompra" placeholder="12">
+
+        <label class="campo-label">Cuota inicial (si ya viene en curso, ej: 4)</label>
+        <input type="number" id="inputCuotaInicialCompra" placeholder="1" value="1">
+
+        <label class="campo-label">Mes de esa cuota inicial</label>
+        <input type="month" id="inputMesPrimeraCuotaCompra">
+
+        <label class="campo-label">Medio de pago</label>
+        <select id="selectMedioPagoCompraCuotas">
+          <option value="Tarjeta credito">Tarjeta credito</option>
+          <option value="Tarjeta debito">Tarjeta debito</option>
+        </select>
+
+        <p class="label-muted" id="previewMontoCuotaCompra" style="margin-top:10px;"></p>
+
+        <button type="button" class="btn-guardar" id="btnGuardarCompraCuotas">Guardar compra</button>
+      </div>
+    </div>
+
+    <div id="modalSelector" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo" id="modalTitulo">Elegir categoria</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarModal" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <div id="modalLista" class="modal-lista"></div>
+      </div>
+    </div>
+
+    <div id="modalConfirmar" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo" id="tituloModalConfirmar">Confirmar</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarModalConfirmar" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <p class="label-muted" id="mensajeModalConfirmar" style="font-size:14px;margin-bottom:18px;"></p>
+        <button type="button" class="btn-guardar" id="btnConfirmarAccion" style="background:var(--rojo);margin-top:0;">Eliminar</button>
+      </div>
+    </div>
+
+    <div id="modalNuevaPersona" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo">Nueva persona</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarModalPersona" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <label class="campo-label">Nombre</label>
+        <input type="text" id="inputNombrePersona" placeholder="Ej: Juan">
+        <button type="button" class="btn-guardar" id="btnGuardarPersona">Guardar persona</button>
+      </div>
+    </div>
+
+    <div id="modalPagoCuota" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo" id="tituloModalPagoCuota">Marcar cuota pagada</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarModalPagoCuota" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <label class="campo-label">Monto (ajustalo si el banco cobro distinto)</label>
+        <input type="text" inputmode="decimal" id="inputMontoPagoCuota">
+        <label class="campo-label">Fecha</label>
+        <input type="date" id="inputFechaPagoCuota">
+        <button type="button" class="btn-guardar" id="btnConfirmarPagoCuota">Confirmar</button>
+      </div>
+    </div>
+
+    <div id="modalEditarCategoria" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo" id="tituloModalEditarCategoria">Nueva categoria</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarModalEditarCategoria" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+
+        <label class="campo-label">Nombre</label>
+        <input type="text" id="inputNombreCategoria" placeholder="Ej: Comida">
+
+        <label class="campo-label">Tipo</label>
+        <div class="chips-tipo" id="chipsTipoCategoria">
+          <button type="button" class="chip-tipo" data-tipo="Fijo">Fijo</button>
+          <button type="button" class="chip-tipo" data-tipo="Variable">Variable</button>
+          <button type="button" class="chip-tipo" data-tipo="Ahorro">Ahorro</button>
+          <button type="button" class="chip-tipo" data-tipo="Ingreso">Ingreso</button>
+        </div>
+
+        <label class="campo-label">Subcategoria (opcional)</label>
+        <input type="text" id="inputSubcategoriaCategoria" placeholder="Ej: Carniceria">
+
+        <label class="campo-label">Icono (Material Symbols)</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="text" id="inputIconoCategoria" placeholder="Ej: restaurant" style="flex:1;">
+          <div class="icono-categoria" style="flex-shrink:0;">
+            <span class="material-symbols-rounded" id="previewIconoCategoria">category</span>
+          </div>
+        </div>
+        <div id="grillaIconos" class="grilla-iconos"></div>
+        <p class="label-muted" style="margin-top:4px;">O escribi cualquier otro nombre de fonts.google.com/icons</p>
+
+        <label class="campo-label">Color</label>
+        <input type="color" id="inputColorCategoria" style="height:44px;padding:4px;">
+
+        <button type="button" class="btn-guardar" id="btnGuardarCategoria">Guardar categoria</button>
+      </div>
+    </div>
+
+    <div id="modalNuevoGrupo" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo">Nuevo grupo</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarModalGrupo" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <label class="campo-label">Nombre</label>
+        <input type="text" id="inputNombreGrupo" placeholder="Ej: Asado domingo">
+        <label class="campo-label">Fecha</label>
+        <input type="date" id="inputFechaGrupo">
+        <button type="button" class="btn-guardar" id="btnGuardarGrupo">Crear grupo</button>
+      </div>
+    </div>
+
+    <div id="modalNuevoGastoGrupo" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo">Nuevo gasto</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarModalGastoGrupo" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+
+        <label class="campo-label">Descripcion</label>
+        <input type="text" id="inputDescripcionGastoGrupo" placeholder="Ej: Carne">
+
+        <label class="campo-label">Monto total</label>
+        <input type="text" inputmode="decimal" id="inputMontoGastoGrupo" placeholder="0">
+
+        <label class="campo-label">Quien pago</label>
+        <select id="selectPagadoPor"></select>
+
+        <div id="filaCategoriaGastoGrupo" style="display:none;">
+          <label class="campo-label">Categoria</label>
+          <button type="button" class="campo-selector" id="btnCategoriaGastoGrupo">
+            <span class="selector-icono material-symbols-rounded" id="iconoCategoriaGastoGrupo">category</span>
+            <span class="selector-texto" id="textoCategoriaGastoGrupo">Elegir categoria</span>
+            <span class="material-symbols-rounded selector-chevron">chevron_right</span>
+          </button>
+        </div>
+
+        <label class="campo-label">Fecha</label>
+        <input type="date" id="inputFechaGastoGrupo">
+
+        <p class="titulo-seccion" style="margin-top:16px;">Participantes</p>
+        <button type="button" class="campo-selector" id="btnElegirParticipantes">
+          <span class="material-symbols-rounded selector-icono">group_add</span>
+          <span class="selector-texto" id="textoParticipantesSel">Elegir participantes</span>
+          <span class="material-symbols-rounded selector-chevron">chevron_right</span>
+        </button>
+        <div id="listaParticipantesGastoGrupo" style="margin-top:8px;"></div>
+        <p class="label-muted" id="totalAsignadoGastoGrupo" style="margin-top:6px;"></p>
+
+        <button type="button" class="btn-guardar" id="btnGuardarGastoGrupo">Guardar gasto</button>
+      </div>
+    </div>
+
+    <div id="modalParticipantes" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo">Elegir participantes</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarModalParticipantes" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <input type="text" id="inputBuscarParticipante" placeholder="Buscar persona..." style="margin-bottom:10px;">
+        <div id="listaBuscarParticipantes"></div>
+        <button type="button" class="btn-secundario" id="btnAgregarPersonaDesdeBuscador" style="margin-top:8px;">
+          <span class="material-symbols-rounded icon-sm" style="vertical-align:-3px;">person_add</span>
+          Agregar persona nueva
+        </button>
+        <button type="button" class="btn-guardar" id="btnConfirmarParticipantes">Listo</button>
+      </div>
+    </div>
+
+    <div id="modalLiquidacion" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo" id="tituloModalLiquidacion">Registrar pago</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarModalLiquidacion" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+
+        <label class="campo-label">Monto</label>
+        <input type="text" inputmode="decimal" id="inputMontoLiquidacion">
+
+        <div id="filaCategoriaLiquidacion" style="display:none;">
+          <label class="campo-label">Categoria</label>
+          <button type="button" class="campo-selector" id="btnCategoriaLiquidacion">
+            <span class="selector-icono material-symbols-rounded" id="iconoCategoriaLiquidacion">category</span>
+            <span class="selector-texto" id="textoCategoriaLiquidacion">Elegir categoria</span>
+            <span class="material-symbols-rounded selector-chevron">chevron_right</span>
+          </button>
+        </div>
+
+        <label class="campo-label">Fecha</label>
+        <input type="date" id="inputFechaLiquidacion">
+
+        <button type="button" class="btn-guardar" id="btnConfirmarLiquidacion">Confirmar</button>
+      </div>
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="nav-item activo" data-vista="inicio">
+        <span class="material-symbols-rounded">home</span>
+        <span class="nav-label">Inicio</span>
+      </button>
+      <button class="nav-item" data-vista="escanear">
+        <span class="material-symbols-rounded">photo_camera</span>
+        <span class="nav-label">Escanear</span>
+      </button>
+      <button class="fab" data-vista="agregar" aria-label="Agregar gasto">
+        <span class="material-symbols-rounded">add</span>
+      </button>
+      <button class="nav-item" data-vista="grupos">
+        <span class="material-symbols-rounded">groups</span>
+        <span class="nav-label">Grupos</span>
+      </button>
+      <button class="nav-item" data-vista="categorias">
+        <span class="material-symbols-rounded">category</span>
+        <span class="nav-label">Categorias</span>
+      </button>
+    </nav>
+
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
