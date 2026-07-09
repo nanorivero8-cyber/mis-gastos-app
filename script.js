@@ -7,7 +7,7 @@
 // de Apps Script (Implementar -> Administrar implementaciones -> copiar
 // la URL que termina en /exec).
 // =====================================================================
-var APPS_SCRIPT_API_URL = 'https://script.google.com/macros/s/AKfycbxhDZ-P5RrJcgPrJVGfagZ8-S-44LQS49gNufhjwMROdFy9YNq974TGfilkucU9guvgpQ/exec';
+var APPS_SCRIPT_API_URL = 'PEGA_ACA_TU_URL_DE_APPS_SCRIPT/exec';
 
 function _crearLlamadaApi() {
   var successHandler = null;
@@ -1300,35 +1300,75 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       var color = COLORES_CATEGORIA[m.categoria] || '#5F5E5A';
       var icono = (infoCategorias[m.categoria] && infoCategorias[m.categoria].Icono) || 'category';
       var esIngreso = m.tipo === 'Ingreso';
-      var subnombre = [m.subcategoria, m.cuentaNombre, formatearFecha(m.fecha)].filter(Boolean).join(' · ');
+      var subnombre = [m.categoria, m.subcategoria, formatearFecha(m.fecha)].filter(Boolean).join(' · ');
+      var titulo = m.descripcion || m.categoria || 'Sin descripcion';
 
       return '<div class="fila-movimiento" data-id="' + m.id + '">' +
         '<div class="icono-categoria" style="background:' + color + '22;">' +
           '<span class="material-symbols-rounded" style="color:' + color + ';">' + icono + '</span>' +
         '</div>' +
         '<div class="nombre-cat">' +
-          '<p class="nombre">' + escaparHtml(m.descripcion) + '</p>' +
+          '<p class="nombre">' + escaparHtml(titulo) + '</p>' +
           '<p class="subnombre">' + escaparHtml(subnombre) + '</p>' +
         '</div>' +
         '<span class="monto-mov ' + (esIngreso ? 'ingreso' : 'gasto') + '">' + (esIngreso ? '+' : '-') + formatearMonto(m.monto) + '</span>' +
-        '<button type="button" class="btn-borrar-item" data-id="' + m.id + '" aria-label="Eliminar">' +
-          '<span class="material-symbols-rounded icon-sm">delete</span>' +
-        '</button>' +
         '</div>';
     }).join('');
 
-    document.querySelectorAll('#listaMovimientosResultado .btn-borrar-item').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var id = btn.getAttribute('data-id');
-        mostrarConfirmacion('¿Eliminar este movimiento?', function() {
-          google.script.run
-            .withSuccessHandler(function() { buscarMovimientosAhora(); cargarDashboard(); })
-            .withFailureHandler(mostrarError)
-            .eliminarMovimiento(id);
-        });
+    document.querySelectorAll('#listaMovimientosResultado .fila-movimiento').forEach(function(fila) {
+      fila.addEventListener('click', function() {
+        var m = lista.find(function(item) { return item.id === fila.getAttribute('data-id'); });
+        if (m) abrirDetalleMovimiento(m);
       });
     });
   }
+
+  var movimientoEnDetalleId = null;
+
+  function abrirDetalleMovimiento(m) {
+    movimientoEnDetalleId = m.id;
+    var esIngreso = m.tipo === 'Ingreso';
+    var filas = [
+      ['Descripcion', m.descripcion || '(sin descripcion)'],
+      ['Tipo', m.tipo],
+      ['Categoria', m.categoria],
+      ['Subcategoria', m.subcategoria || '—'],
+      ['Comercio', m.comercio || '—'],
+      ['Cuenta', m.cuentaNombre || '—'],
+      ['Medio de pago', m.medioPago || '—'],
+      ['Fecha', formatearFecha(m.fecha)],
+      ['Monto', (esIngreso ? '+' : '-') + formatearMonto(m.monto)]
+    ];
+
+    document.getElementById('contenidoDetalleMovimiento').innerHTML = filas.map(function(f) {
+      return '<div class="fila-detalle-mov">' +
+        '<span class="etiqueta">' + f[0] + '</span>' +
+        '<span class="valor">' + escaparHtml(String(f[1])) + '</span>' +
+        '</div>';
+    }).join('');
+
+    document.getElementById('modalDetalleMovimiento').style.display = 'flex';
+  }
+
+  document.getElementById('btnCerrarDetalleMovimiento').addEventListener('click', function() {
+    document.getElementById('modalDetalleMovimiento').style.display = 'none';
+  });
+  document.getElementById('modalDetalleMovimiento').addEventListener('click', function(e) {
+    if (e.target.id === 'modalDetalleMovimiento') e.target.style.display = 'none';
+  });
+
+  document.getElementById('btnEliminarMovimientoDetalle').addEventListener('click', function() {
+    mostrarConfirmacion('¿Eliminar este movimiento?', function() {
+      google.script.run
+        .withSuccessHandler(function() {
+          document.getElementById('modalDetalleMovimiento').style.display = 'none';
+          buscarMovimientosAhora();
+          cargarDashboard();
+        })
+        .withFailureHandler(mostrarError)
+        .eliminarMovimiento(movimientoEnDetalleId);
+    });
+  });
 
   // ---------------------------------------------------------------
   // MINI CALCULADORA (reutilizable desde cualquier campo de monto)

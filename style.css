@@ -297,6 +297,7 @@
     gap: 10px;
     padding: 10px 0;
     border-bottom: 0.5px solid var(--border);
+    cursor: pointer;
   }
 
   .fila-movimiento:last-child { border-bottom: none; }
@@ -314,6 +315,18 @@
 
   .fila-movimiento .monto-mov.ingreso { color: var(--verde); }
   .fila-movimiento .monto-mov.gasto { color: var(--rojo); }
+
+  .fila-detalle-mov {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .fila-detalle-mov:last-child { border-bottom: none; }
+  .fila-detalle-mov .etiqueta { font-size: 12px; color: var(--text-muted); }
+  .fila-detalle-mov .valor { font-size: 13px; color: var(--text-primary); font-weight: 500; text-align: right; }
 
   .fila-categoria .nombre, .fila-persona .nombre {
     font-size: 13px;
