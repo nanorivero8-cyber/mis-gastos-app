@@ -50,6 +50,16 @@
           <div id="listaCategorias" class="lista-categorias"></div>
         </div>
 
+        <button type="button" class="btn-secundario" id="btnVerResumenGeneral" style="margin-bottom:8px;">
+          <span class="material-symbols-rounded icon-sm" style="vertical-align:-3px;">insights</span>
+          Resumen general
+        </button>
+
+        <button type="button" class="btn-secundario" id="btnVerCuentas" style="margin-bottom:8px;">
+          <span class="material-symbols-rounded icon-sm" style="vertical-align:-3px;">account_balance</span>
+          Mis cuentas
+        </button>
+
         <button type="button" class="btn-secundario" id="btnVerCuotas">
           <span class="material-symbols-rounded icon-sm" style="vertical-align:-3px;">calendar_month</span>
           Cuotas a futuro
@@ -104,6 +114,13 @@
 
           <label class="campo-label">Fecha</label>
           <input type="date" id="inputFecha">
+
+          <label class="campo-label">Cuenta</label>
+          <button type="button" class="campo-selector" id="btnCuenta">
+            <span class="selector-icono material-symbols-rounded" id="iconoCuentaSel">account_balance</span>
+            <span class="selector-texto" id="textoCuentaSel">Elegir cuenta</span>
+            <span class="material-symbols-rounded selector-chevron">chevron_right</span>
+          </button>
 
           <label class="campo-label">Medio de pago</label>
           <select id="selectMedioPago">
@@ -181,6 +198,13 @@
           <label class="campo-label">Fecha</label>
           <input type="date" id="inputFechaTicket">
 
+          <label class="campo-label">Cuenta</label>
+          <button type="button" class="campo-selector" id="btnCuentaTicket">
+            <span class="selector-icono material-symbols-rounded" id="iconoCuentaTicketSel">account_balance</span>
+            <span class="selector-texto" id="textoCuentaTicketSel">Elegir cuenta</span>
+            <span class="material-symbols-rounded selector-chevron">chevron_right</span>
+          </button>
+
           <label class="campo-label">Medio de pago</label>
           <select id="selectMedioPagoTicket">
             <option value="Efectivo">Efectivo</option>
@@ -188,6 +212,26 @@
             <option value="Tarjeta credito">Tarjeta credito</option>
             <option value="Transferencia">Transferencia</option>
           </select>
+
+          <label class="campo-label">¿Para quien es este gasto?</label>
+          <div class="chips-tipo" id="chipsDestinoTicket">
+            <button type="button" class="chip-tipo activo" data-destino="mio">Mio</button>
+            <button type="button" class="chip-tipo" data-destino="grupo">Grupo</button>
+          </div>
+
+          <div id="filaGrupoTicket" style="display:none;">
+            <label class="campo-label">Grupo</label>
+            <select id="selectGrupoTicket"></select>
+
+            <label class="campo-label">Participantes (se reparte igual en todos los items)</label>
+            <button type="button" class="campo-selector" id="btnElegirParticipantesTicket">
+              <span class="material-symbols-rounded selector-icono">group_add</span>
+              <span class="selector-texto" id="textoParticipantesTicketSel">Elegir participantes</span>
+              <span class="material-symbols-rounded selector-chevron">chevron_right</span>
+            </button>
+            <div id="listaParticipantesTicket" style="margin-top:8px;"></div>
+            <p class="label-muted" id="totalAsignadoTicket" style="margin-top:6px;"></p>
+          </div>
 
           <div class="fila-total-items">
             <span class="titulo-seccion" style="margin:0;">Items</span>
@@ -257,6 +301,46 @@
 
         <p class="titulo-seccion">Proyeccion mes a mes</p>
         <div id="listaCuotas"></div>
+      </div>
+      <div id="vistaResumenGeneral" class="vista" style="display:none;">
+        <div class="header-subvista">
+          <button type="button" class="btn-cerrar" id="btnCerrarResumenGeneral" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+          <p class="titulo-subvista">Resumen general</p>
+          <div style="width:36px;"></div>
+        </div>
+
+        <div class="balance-card" style="padding:16px 18px;">
+          <p class="label-muted">Patrimonio total (todas tus cuentas)</p>
+          <p class="monto-grande" id="montoPatrimonioResumen" style="font-size:24px;">$ --</p>
+        </div>
+
+        <p class="titulo-seccion" style="margin-top:20px;">Evolucion (ultimos 6 meses)</p>
+        <div id="graficoEvolucion" class="grafico-evolucion"></div>
+        <p class="label-muted" id="textoPromedioMensual" style="margin-top:8px;text-align:center;"></p>
+
+        <p class="titulo-seccion" style="margin-top:24px;">Categorias top del anio</p>
+        <div id="listaTopCategorias"></div>
+      </div>
+
+      <div id="vistaCuentas" class="vista" style="display:none;">
+        <div class="header-subvista">
+          <button type="button" class="btn-cerrar" id="btnCerrarCuentas" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+          <p class="titulo-subvista">Mis cuentas</p>
+          <button type="button" class="btn-cerrar" id="btnNuevaCuenta" aria-label="Nueva cuenta">
+            <span class="material-symbols-rounded">add</span>
+          </button>
+        </div>
+
+        <div class="balance-card" style="padding:16px 18px;">
+          <p class="label-muted">Patrimonio total</p>
+          <p class="monto-grande" id="montoPatrimonioTotal" style="font-size:24px;">$ --</p>
+        </div>
+
+        <div id="listaCuentasTab" style="margin-top:16px;"></div>
       </div>
     </main>
 
@@ -369,7 +453,44 @@
         <input type="text" inputmode="decimal" id="inputMontoPagoCuota">
         <label class="campo-label">Fecha</label>
         <input type="date" id="inputFechaPagoCuota">
+        <label class="campo-label">Cuenta</label>
+        <button type="button" class="campo-selector" id="btnCuentaPagoCuota">
+          <span class="selector-icono material-symbols-rounded" id="iconoCuentaPagoCuotaSel">account_balance</span>
+          <span class="selector-texto" id="textoCuentaPagoCuotaSel">Elegir cuenta</span>
+          <span class="material-symbols-rounded selector-chevron">chevron_right</span>
+        </button>
         <button type="button" class="btn-guardar" id="btnConfirmarPagoCuota">Confirmar</button>
+      </div>
+    </div>
+
+    <div id="modalEditarCuenta" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo" id="tituloModalEditarCuenta">Nueva cuenta</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarModalEditarCuenta" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+
+        <label class="campo-label">Nombre</label>
+        <input type="text" id="inputNombreCuenta" placeholder="Ej: Banco Santander">
+
+        <label class="campo-label">Icono</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="text" id="inputIconoCuenta" placeholder="Ej: account_balance" style="flex:1;">
+          <div class="icono-categoria icono-cuenta" style="flex-shrink:0;">
+            <span class="material-symbols-rounded" id="previewIconoCuenta">account_balance</span>
+          </div>
+        </div>
+        <div id="grillaIconosCuenta" class="grilla-iconos"></div>
+
+        <label class="campo-label">Color</label>
+        <input type="color" id="inputColorCuenta" style="height:44px;padding:4px;">
+
+        <label class="campo-label" id="labelSaldoCuenta">Saldo inicial</label>
+        <input type="text" inputmode="decimal" id="inputSaldoCuenta" placeholder="0">
+
+        <button type="button" class="btn-guardar" id="btnGuardarCuenta">Guardar cuenta</button>
       </div>
     </div>
 
@@ -454,6 +575,13 @@
             <span class="selector-texto" id="textoCategoriaGastoGrupo">Elegir categoria</span>
             <span class="material-symbols-rounded selector-chevron">chevron_right</span>
           </button>
+
+          <label class="campo-label">Cuenta</label>
+          <button type="button" class="campo-selector" id="btnCuentaGastoGrupo">
+            <span class="selector-icono material-symbols-rounded" id="iconoCuentaGastoGrupoSel">account_balance</span>
+            <span class="selector-texto" id="textoCuentaGastoGrupoSel">Elegir cuenta</span>
+            <span class="material-symbols-rounded selector-chevron">chevron_right</span>
+          </button>
         </div>
 
         <label class="campo-label">Fecha</label>
@@ -513,6 +641,13 @@
 
         <label class="campo-label">Fecha</label>
         <input type="date" id="inputFechaLiquidacion">
+
+        <label class="campo-label">Cuenta</label>
+        <button type="button" class="campo-selector" id="btnCuentaLiquidacion">
+          <span class="selector-icono material-symbols-rounded" id="iconoCuentaLiquidacionSel">account_balance</span>
+          <span class="selector-texto" id="textoCuentaLiquidacionSel">Elegir cuenta</span>
+          <span class="material-symbols-rounded selector-chevron">chevron_right</span>
+        </button>
 
         <button type="button" class="btn-guardar" id="btnConfirmarLiquidacion">Confirmar</button>
       </div>

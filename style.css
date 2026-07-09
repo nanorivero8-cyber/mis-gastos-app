@@ -170,6 +170,62 @@
 
   .icono-categoria .material-symbols-rounded { font-size: 17px; }
 
+  /* Variante circular tipo "logo" para cuentas (bancos/billeteras) */
+  .icono-categoria.icono-cuenta {
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+
+  .icono-categoria.icono-cuenta .material-symbols-rounded { font-size: 20px; }
+
+  .modal-item .icono-categoria.icono-cuenta { width: 36px; height: 36px; }
+  .modal-item .icono-categoria.icono-cuenta .material-symbols-rounded { font-size: 18px; }
+
+  .grafico-evolucion {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px;
+    height: 140px;
+    padding: 10px 4px 0;
+    background: var(--card-bg);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .barra-mes {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    gap: 4px;
+  }
+
+  .barra-mes-valor {
+    font-size: 9px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .barra-mes-rect {
+    width: 60%;
+    border-radius: 4px 4px 0 0;
+    background: var(--celeste);
+    min-height: 3px;
+  }
+
+  .barra-mes-rect.mes-actual { background: var(--verde); }
+
+  .barra-mes-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
   .fila-categoria .nombre, .fila-persona .nombre {
     font-size: 13px;
     flex: 1;

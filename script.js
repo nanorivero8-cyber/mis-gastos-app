@@ -7,7 +7,7 @@
 // de Apps Script (Implementar -> Administrar implementaciones -> copiar
 // la URL que termina en /exec).
 // =====================================================================
-var APPS_SCRIPT_API_URL = 'https://script.google.com/macros/s/AKfycbxhDZ-P5RrJcgPrJVGfagZ8-S-44LQS49gNufhjwMROdFy9YNq974TGfilkucU9guvgpQ/exec';
+var APPS_SCRIPT_API_URL = 'PEGA_ACA_TU_URL_DE_APPS_SCRIPT/exec';
 
 function _crearLlamadaApi() {
   var successHandler = null;
@@ -235,6 +235,8 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     document.getElementById('vistaEscanear').style.display = 'none';
     document.getElementById('vistaDetalleGrupo').style.display = 'none';
     document.getElementById('vistaCuotas').style.display = 'none';
+    document.getElementById('vistaCuentas').style.display = 'none';
+    document.getElementById('vistaResumenGeneral').style.display = 'none';
     mostrarTab(tabActual);
   }
 
@@ -264,6 +266,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     estadoForm.tipo = 'Variable';
     estadoForm.categoria = null;
     estadoForm.subcategoria = null;
+    estadoForm.cuentaId = null;
 
     document.querySelectorAll('.chip-tipo').forEach(function(c) {
       c.classList.toggle('activo', c.getAttribute('data-tipo') === estadoForm.tipo);
@@ -272,12 +275,22 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     document.getElementById('textoCategoriaSel').textContent = 'Elegir categoria';
     document.getElementById('iconoCategoriaSel').textContent = 'category';
     document.getElementById('filaSubcategoria').style.display = 'none';
+    document.getElementById('textoCuentaSel').textContent = 'Elegir cuenta';
+    document.getElementById('iconoCuentaSel').textContent = 'account_balance';
     document.getElementById('checkRecurrente').checked = false;
     document.getElementById('inputMonto').value = '';
     document.getElementById('inputDescripcion').value = '';
     document.getElementById('inputComercio').value = '';
     document.getElementById('inputFecha').value = new Date().toISOString().slice(0, 10);
   }
+
+  document.getElementById('btnCuenta').addEventListener('click', function() {
+    abrirModalCuenta(function(id, nombre, icono) {
+      estadoForm.cuentaId = id;
+      document.getElementById('textoCuentaSel').textContent = nombre;
+      document.getElementById('iconoCuentaSel').textContent = icono;
+    });
+  });
 
   document.getElementById('btnCerrarAgregar').addEventListener('click', cerrarOverlay);
 
@@ -387,10 +400,40 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
     document.getElementById('modalSelector').style.display = 'flex';
   }
+  // ---------------------------------------------------------------
+  // SELECTOR DE CUENTA (reutiliza el mismo modal de categorias)
+  // ---------------------------------------------------------------
+  function abrirModalCuenta(callback) {
+    var lista = DATOS_APP.cuentas || [];
 
-  // ---------------------------------------------------------------
-  // GUARDAR EL GASTO
-  // ---------------------------------------------------------------
+    if (!lista.length) {
+      alert('Todavia no cargaste ninguna cuenta. Anda a "Mis cuentas" desde el inicio para crear una.');
+      return;
+    }
+
+    document.getElementById('modalTitulo').textContent = 'Elegir cuenta';
+    document.getElementById('modalLista').innerHTML = lista.map(function(c) {
+      return '<div class="modal-item" data-id="' + c.ID + '" data-nombre="' + escaparHtml(c.Nombre) + '" data-icono="' + c.Icono + '">' +
+        '<div class="icono-categoria icono-cuenta" style="background:' + c.Color + '22;">' +
+          '<span class="material-symbols-rounded" style="color:' + c.Color + ';">' + c.Icono + '</span>' +
+        '</div>' +
+        '<span class="nombre">' + escaparHtml(c.Nombre) + ' &middot; ' + formatearMonto(c.SaldoActual) + '</span>' +
+        '</div>';
+    }).join('');
+
+    document.querySelectorAll('#modalLista .modal-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        var id = item.getAttribute('data-id');
+        var nombre = item.getAttribute('data-nombre');
+        var icono = item.getAttribute('data-icono');
+        cerrarModal();
+        callback(id, nombre, icono);
+      });
+    });
+
+    document.getElementById('modalSelector').style.display = 'flex';
+  }
+
   // ---------------------------------------------------------------
   // VISTA: ESCANEO DE TICKET
   // ---------------------------------------------------------------
@@ -455,9 +498,29 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     document.getElementById('inputComercioTicket').value = estadoTicket.comercio || '';
     document.getElementById('inputFechaTicket').value = estadoTicket.fecha || new Date().toISOString().slice(0, 10);
     document.getElementById('selectMedioPagoTicket').value = estadoTicket.medioPago || 'Efectivo';
+    estadoTicket.cuentaId = null;
+    document.getElementById('textoCuentaTicketSel').textContent = 'Elegir cuenta';
+    document.getElementById('iconoCuentaTicketSel').textContent = 'account_balance';
+
+    estadoTicket.destino = 'mio';
+    document.querySelectorAll('#chipsDestinoTicket .chip-tipo').forEach(function(c) {
+      c.classList.toggle('activo', c.getAttribute('data-destino') === 'mio');
+    });
+    document.getElementById('filaGrupoTicket').style.display = 'none';
+    estadoParticipantesTicket.disponibles = [];
+    estadoParticipantesTicket.participantes = [];
+
     renderListaItemsTicket();
     mostrarPanelTicket('confirmar');
   }
+
+  document.getElementById('btnCuentaTicket').addEventListener('click', function() {
+    abrirModalCuenta(function(id, nombre, icono) {
+      estadoTicket.cuentaId = id;
+      document.getElementById('textoCuentaTicketSel').textContent = nombre;
+      document.getElementById('iconoCuentaTicketSel').textContent = icono;
+    });
+  });
 
   function actualizarTotalItemsTicket() {
     var total = estadoTicket.items.reduce(function(sum, i) { return sum + (Number(i.monto) || 0); }, 0);
@@ -550,6 +613,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     var monto = parsearMonto(document.getElementById('inputMonto').value);
     if (!monto || monto <= 0) { alert('Ingresa un monto valido.'); return; }
     if (!estadoForm.categoria) { alert('Elegi una categoria.'); return; }
+    if (!estadoForm.cuentaId) { alert('Elegi una cuenta.'); return; }
 
     var datos = {
       fecha: document.getElementById('inputFecha').value,
@@ -560,7 +624,8 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       descripcion: document.getElementById('inputDescripcion').value || estadoForm.categoria,
       monto: monto,
       medioPago: document.getElementById('selectMedioPago').value,
-      recurrente: document.getElementById('checkRecurrente').checked
+      recurrente: document.getElementById('checkRecurrente').checked,
+      cuentaId: estadoForm.cuentaId
     };
 
     var btnGuardar = document.getElementById('btnGuardarGasto');
@@ -591,10 +656,65 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     var sinMonto = estadoTicket.items.some(function(i) { return !i.monto || i.monto <= 0; });
     if (sinMonto) { alert('Todos los items necesitan un monto valido.'); return; }
 
+    if (!estadoTicket.cuentaId) { alert('Elegi una cuenta.'); return; }
+
+    var btnGuardar = document.getElementById('btnGuardarTicket');
+
+    if (estadoTicket.destino === 'grupo') {
+      var grupoId = document.getElementById('selectGrupoTicket').value;
+      if (!grupoId) { alert('Elegi un grupo.'); return; }
+      if (!estadoParticipantesTicket.participantes.length) { alert('Elegi al menos un participante.'); return; }
+
+      var totalTicket = estadoTicket.items.reduce(function(s, i) { return s + (Number(i.monto) || 0); }, 0);
+      var totalAsignado = estadoParticipantesTicket.participantes.reduce(function(s, p) { return s + (Number(p.monto) || 0); }, 0);
+      if (Math.abs(totalAsignado - totalTicket) > 1) {
+        alert('Los montos asignados (' + formatearMonto(totalAsignado) + ') no coinciden con el total (' + formatearMonto(totalTicket) + ').');
+        return;
+      }
+
+      var participantesPorcentaje = estadoParticipantesTicket.participantes.map(function(p) {
+        return { personaId: p.id, porcentaje: totalTicket > 0 ? (p.monto / totalTicket * 100) : 0 };
+      });
+
+      var payloadGrupo = {
+        comercio: document.getElementById('inputComercioTicket').value,
+        fecha: document.getElementById('inputFechaTicket').value,
+        medioPago: document.getElementById('selectMedioPagoTicket').value,
+        cuentaId: estadoTicket.cuentaId,
+        items: estadoTicket.items.map(function(i) {
+          return {
+            descripcion: i.descripcion || i.categoria,
+            monto: i.monto,
+            categoria: i.categoria,
+            subcategoria: i.subcategoria || ''
+          };
+        })
+      };
+
+      btnGuardar.disabled = true;
+      btnGuardar.textContent = 'Guardando...';
+
+      google.script.run
+        .withSuccessHandler(function() {
+          btnGuardar.disabled = false;
+          btnGuardar.textContent = 'Guardar ticket';
+          cerrarOverlay();
+          cargarDashboard();
+        })
+        .withFailureHandler(function(error) {
+          btnGuardar.disabled = false;
+          btnGuardar.textContent = 'Guardar ticket';
+          alert('No se pudo guardar el ticket: ' + (error.message || error));
+        })
+        .guardarTicketComoGrupo(payloadGrupo, grupoId, participantesPorcentaje);
+      return;
+    }
+
     var payload = {
       comercio: document.getElementById('inputComercioTicket').value,
       fecha: document.getElementById('inputFechaTicket').value,
       medioPago: document.getElementById('selectMedioPagoTicket').value,
+      cuentaId: estadoTicket.cuentaId,
       items: estadoTicket.items.map(function(i) {
         return {
           descripcion: i.descripcion || i.categoria,
@@ -605,7 +725,6 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       })
     };
 
-    var btnGuardar = document.getElementById('btnGuardarTicket');
     btnGuardar.disabled = true;
     btnGuardar.textContent = 'Guardando...';
 
@@ -978,10 +1097,21 @@ window.onerror = function(mensaje, url, linea, columna, error) {
         };
         document.getElementById('inputMontoPagoCuota').value = btn.getAttribute('data-monto');
         document.getElementById('inputFechaPagoCuota').value = new Date().toISOString().slice(0, 10);
+        cuotaSeleccionada.cuentaId = null;
+        document.getElementById('textoCuentaPagoCuotaSel').textContent = 'Elegir cuenta';
+        document.getElementById('iconoCuentaPagoCuotaSel').textContent = 'account_balance';
         document.getElementById('modalPagoCuota').style.display = 'flex';
       });
     });
   }
+
+  document.getElementById('btnCuentaPagoCuota').addEventListener('click', function() {
+    abrirModalCuenta(function(id, nombre, icono) {
+      cuotaSeleccionada.cuentaId = id;
+      document.getElementById('textoCuentaPagoCuotaSel').textContent = nombre;
+      document.getElementById('iconoCuentaPagoCuotaSel').textContent = icono;
+    });
+  });
 
   document.getElementById('btnCerrarModalPagoCuota').addEventListener('click', function() {
     document.getElementById('modalPagoCuota').style.display = 'none';
@@ -993,6 +1123,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
   document.getElementById('btnConfirmarPagoCuota').addEventListener('click', function() {
     var monto = parsearMonto(document.getElementById('inputMontoPagoCuota').value);
     if (!monto || monto <= 0) { alert('Ingresa un monto valido.'); return; }
+    if (!cuotaSeleccionada.cuentaId) { alert('Elegi una cuenta.'); return; }
 
     google.script.run
       .withSuccessHandler(function() {
@@ -1001,7 +1132,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
         cargarDashboard();
       })
       .withFailureHandler(function(error) { alert('No se pudo registrar el pago: ' + (error.message || error)); })
-      .marcarCuotaPagada(cuotaSeleccionada.compraId, Number(cuotaSeleccionada.numeroCuota), monto, document.getElementById('inputFechaPagoCuota').value);
+      .marcarCuotaPagada(cuotaSeleccionada.compraId, Number(cuotaSeleccionada.numeroCuota), monto, document.getElementById('inputFechaPagoCuota').value, cuotaSeleccionada.cuentaId);
   });
 
   // ---------------------------------------------------------------
@@ -1095,6 +1226,230 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       })
       .agregarCompraCuotas(datos);
   });
+
+  // ---------------------------------------------------------------
+  // VISTA: RESUMEN GENERAL
+  // ---------------------------------------------------------------
+  var NOMBRES_MES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+  document.getElementById('btnVerResumenGeneral').addEventListener('click', function() {
+    document.querySelectorAll('.vista').forEach(function(v) { v.style.display = 'none'; });
+    document.getElementById('vistaResumenGeneral').style.display = 'block';
+    cargarResumenGeneral();
+  });
+
+  document.getElementById('btnCerrarResumenGeneral').addEventListener('click', cerrarOverlay);
+
+  function cargarResumenGeneral() {
+    document.getElementById('graficoEvolucion').innerHTML =
+      '<div class="vista-cargando visible" style="padding:20px 0;width:100%;"><span class="material-symbols-rounded icon-spin">progress_activity</span></div>';
+    document.getElementById('listaTopCategorias').innerHTML = '';
+    google.script.run.withSuccessHandler(renderResumenGeneral).withFailureHandler(mostrarError).getResumenGeneral(6);
+  }
+
+  function renderResumenGeneral(resumen) {
+    document.getElementById('montoPatrimonioResumen').textContent = formatearMonto(resumen.patrimonioTotal);
+
+    var maximo = Math.max.apply(null, resumen.evolucion.map(function(e) { return e.totalNeto; }).concat([1]));
+    var hoy = new Date();
+
+    document.getElementById('graficoEvolucion').innerHTML = resumen.evolucion.map(function(e) {
+      var alturaPorcentaje = Math.max((e.totalNeto / maximo) * 100, 2);
+      var esMesActual = e.mes === hoy.getMonth() + 1 && e.anio === hoy.getFullYear();
+      return '<div class="barra-mes">' +
+        '<span class="barra-mes-valor">' + formatearMontoCorto(e.totalNeto) + '</span>' +
+        '<div class="barra-mes-rect' + (esMesActual ? ' mes-actual' : '') + '" style="height:' + alturaPorcentaje + '%;"></div>' +
+        '<span class="barra-mes-label">' + NOMBRES_MES_CORTO[e.mes - 1] + '</span>' +
+        '</div>';
+    }).join('');
+
+    document.getElementById('textoPromedioMensual').textContent =
+      'Promedio mensual: ' + formatearMonto(resumen.promedioMensual);
+
+    var infoCategorias = {};
+    (DATOS_APP.categorias || []).forEach(function(c) { infoCategorias[c.Nombre] = c; });
+
+    document.getElementById('listaTopCategorias').innerHTML = resumen.topCategorias.map(function(tc) {
+      return filaCategoria(tc.categoria, tc.monto, infoCategorias[tc.categoria]);
+    }).join('') || '<p class="label-muted" style="text-align:center;padding:20px 0;">Sin gastos registrados este anio.</p>';
+  }
+
+  function formatearMontoCorto(numero) {
+    numero = Number(numero) || 0;
+    if (Math.abs(numero) >= 1000000) return '$' + Math.round(numero / 1000000 * 10) / 10 + 'M';
+    if (Math.abs(numero) >= 1000) return '$' + Math.round(numero / 1000) + 'k';
+    return '$' + Math.round(numero);
+  }
+
+  // ---------------------------------------------------------------
+  // VISTA: CUENTAS
+  // ---------------------------------------------------------------
+  var cuentaEnEdicionId = null;
+
+  document.getElementById('btnVerCuentas').addEventListener('click', function() {
+    document.querySelectorAll('.vista').forEach(function(v) { v.style.display = 'none'; });
+    document.getElementById('vistaCuentas').style.display = 'block';
+    cargarCuentasTab();
+  });
+
+  document.getElementById('btnCerrarCuentas').addEventListener('click', cerrarOverlay);
+
+  function cargarCuentasTab() {
+    document.getElementById('listaCuentasTab').innerHTML =
+      '<div class="vista-cargando visible" style="padding:30px 0;"><span class="material-symbols-rounded icon-spin">progress_activity</span></div>';
+    google.script.run.withSuccessHandler(renderCuentasTab).withFailureHandler(mostrarError).getCuentas(false);
+  }
+
+  function renderCuentasTab(lista) {
+    var patrimonio = lista
+      .filter(function(c) { return c.Activa !== false; })
+      .reduce(function(s, c) { return s + (Number(c.SaldoActual) || 0); }, 0);
+    document.getElementById('montoPatrimonioTotal').textContent = formatearMonto(patrimonio);
+
+    // refrescamos el cache local, asi los selectores de cuenta en otros
+    // formularios reflejan altas/bajas sin recargar toda la app
+    DATOS_APP.cuentas = lista.filter(function(c) { return c.Activa !== false; });
+
+    if (!lista.length) {
+      document.getElementById('listaCuentasTab').innerHTML =
+        '<p class="label-muted" style="text-align:center;padding:20px 0;">Todavia no cargaste ninguna cuenta.</p>';
+      return;
+    }
+
+    document.getElementById('listaCuentasTab').innerHTML = lista.map(function(c) {
+      return '<div class="fila-categoria-admin' + (c.Activa === false ? ' inactiva' : '') + '" data-id="' + c.ID + '">' +
+        '<div class="icono-categoria icono-cuenta" style="background:' + c.Color + '22;">' +
+          '<span class="material-symbols-rounded" style="color:' + c.Color + ';">' + c.Icono + '</span>' +
+        '</div>' +
+        '<div class="nombre-cat">' +
+          '<p class="nombre">' + escaparHtml(c.Nombre) + '</p>' +
+          '<p class="subnombre">' + formatearMonto(c.SaldoActual) + '</p>' +
+        '</div>' +
+        '<button type="button" class="btn-editar-cat" data-id="' + c.ID + '" aria-label="Editar">' +
+          '<span class="material-symbols-rounded icon-sm">edit</span>' +
+        '</button>' +
+        '<input type="checkbox" class="switch-activo" data-id="' + c.ID + '" ' + (c.Activa !== false ? 'checked' : '') + '>' +
+        '</div>';
+    }).join('');
+
+    document.querySelectorAll('#listaCuentasTab .switch-activo').forEach(function(sw) {
+      sw.addEventListener('change', function() {
+        var id = sw.getAttribute('data-id');
+        var fn = sw.checked ? 'reactivarCuenta' : 'desactivarCuenta';
+        google.script.run
+          .withSuccessHandler(function() {
+            sw.closest('.fila-categoria-admin').classList.toggle('inactiva', !sw.checked);
+            cargarCuentasTab();
+          })
+          .withFailureHandler(function(error) {
+            sw.checked = !sw.checked;
+            alert('No se pudo actualizar: ' + (error.message || error));
+          })[fn](id);
+      });
+    });
+
+    document.querySelectorAll('#listaCuentasTab .btn-editar-cat').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var cuenta = lista.find(function(c) { return c.ID === btn.getAttribute('data-id'); });
+        if (cuenta) abrirModalEditarCuenta(cuenta);
+      });
+    });
+  }
+
+  var ICONOS_CUENTA_SUGERIDOS = [
+    'account_balance', 'account_balance_wallet', 'credit_card', 'payments',
+    'savings', 'currency_exchange', 'qr_code_2', 'local_atm',
+    'monetization_on', 'wallet', 'phone_iphone', 'corporate_fare',
+    'account_box', 'diamond', 'paid', 'euro_symbol'
+  ];
+
+  function renderGrillaIconosCuenta(seleccionado) {
+    document.getElementById('grillaIconosCuenta').innerHTML = ICONOS_CUENTA_SUGERIDOS.map(function(icono) {
+      return '<button type="button" class="' + (icono === seleccionado ? 'seleccionado' : '') + '" data-icono="' + icono + '">' +
+        '<span class="material-symbols-rounded">' + icono + '</span>' +
+        '</button>';
+    }).join('');
+
+    document.querySelectorAll('#grillaIconosCuenta button').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var icono = btn.getAttribute('data-icono');
+        document.getElementById('inputIconoCuenta').value = icono;
+        document.getElementById('previewIconoCuenta').textContent = icono;
+        document.querySelectorAll('#grillaIconosCuenta button').forEach(function(b) { b.classList.remove('seleccionado'); });
+        btn.classList.add('seleccionado');
+      });
+    });
+  }
+
+  document.getElementById('btnNuevaCuenta').addEventListener('click', function() {
+    abrirModalEditarCuenta(null);
+  });
+
+  function abrirModalEditarCuenta(cuenta) {
+    cuentaEnEdicionId = cuenta ? cuenta.ID : null;
+    document.getElementById('tituloModalEditarCuenta').textContent = cuenta ? 'Editar cuenta' : 'Nueva cuenta';
+    document.getElementById('inputNombreCuenta').value = cuenta ? cuenta.Nombre : '';
+    document.getElementById('inputIconoCuenta').value = cuenta ? cuenta.Icono : 'account_balance';
+    document.getElementById('previewIconoCuenta').textContent = cuenta ? cuenta.Icono : 'account_balance';
+    document.getElementById('inputColorCuenta').value = cuenta ? (cuenta.Color || '#378ADD') : '#378ADD';
+    document.getElementById('labelSaldoCuenta').textContent = cuenta ? 'Saldo inicial (ajusta el punto de partida)' : 'Saldo inicial';
+    document.getElementById('inputSaldoCuenta').value = cuenta ? cuenta.SaldoInicial : '0';
+    renderGrillaIconosCuenta(cuenta ? cuenta.Icono : 'account_balance');
+    document.getElementById('modalEditarCuenta').style.display = 'flex';
+  }
+
+  document.getElementById('inputIconoCuenta').addEventListener('input', function(e) {
+    var valor = e.target.value.trim() || 'account_balance';
+    document.getElementById('previewIconoCuenta').textContent = valor;
+    document.querySelectorAll('#grillaIconosCuenta button').forEach(function(b) {
+      b.classList.toggle('seleccionado', b.getAttribute('data-icono') === valor);
+    });
+  });
+
+  document.getElementById('btnCerrarModalEditarCuenta').addEventListener('click', function() {
+    document.getElementById('modalEditarCuenta').style.display = 'none';
+  });
+  document.getElementById('modalEditarCuenta').addEventListener('click', function(e) {
+    if (e.target.id === 'modalEditarCuenta') e.target.style.display = 'none';
+  });
+
+  document.getElementById('btnGuardarCuenta').addEventListener('click', function() {
+    var nombre = document.getElementById('inputNombreCuenta').value.trim();
+    if (!nombre) { alert('Ingresa un nombre.'); return; }
+
+    var datos = {
+      nombre: nombre,
+      icono: document.getElementById('inputIconoCuenta').value.trim() || 'account_balance',
+      color: document.getElementById('inputColorCuenta').value,
+      saldoInicial: parsearMonto(document.getElementById('inputSaldoCuenta').value)
+    };
+
+    var btn = document.getElementById('btnGuardarCuenta');
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+
+    var terminar = function() {
+      btn.disabled = false;
+      btn.textContent = 'Guardar cuenta';
+      document.getElementById('modalEditarCuenta').style.display = 'none';
+      cargarCuentasTab();
+    };
+
+    var manejarError = function(error) {
+      btn.disabled = false;
+      btn.textContent = 'Guardar cuenta';
+      alert('No se pudo guardar: ' + (error.message || error));
+    };
+
+    if (cuentaEnEdicionId) {
+      google.script.run.withSuccessHandler(terminar).withFailureHandler(manejarError)
+        .editarCuenta(cuentaEnEdicionId, datos);
+    } else {
+      google.script.run.withSuccessHandler(terminar).withFailureHandler(manejarError)
+        .agregarCuenta(datos);
+    }
+  });
+
   // ---------------------------------------------------------------
   // VISTA: CATEGORIAS
   // ---------------------------------------------------------------
@@ -1301,14 +1656,17 @@ window.onerror = function(mensaje, url, linea, columna, error) {
           .withSuccessHandler(function(personas) {
             DATOS_APP.personas = personas;
             var nueva = personas.find(function(p) { return p.ID === resultado.id; });
-            if (nueva && estadoNuevoGasto && estadoNuevoGasto.disponibles) {
+            var estado = _estadoParticipantesActual();
+            if (nueva && estado && estado.disponibles) {
               // la agregamos a la lista disponible, ya tildada, y
               // refrescamos el buscador para que se vea de una
-              estadoNuevoGasto.disponibles.push({ id: nueva.ID, nombre: nueva.Nombre, seleccionado: true });
-              var opcion = document.createElement('option');
-              opcion.value = nueva.ID;
-              opcion.textContent = nueva.Nombre;
-              document.getElementById('selectPagadoPor').appendChild(opcion);
+              estado.disponibles.push({ id: nueva.ID, nombre: nueva.Nombre, seleccionado: true });
+              if (contextoParticipantes === 'gasto') {
+                var opcion = document.createElement('option');
+                opcion.value = nueva.ID;
+                opcion.textContent = nueva.Nombre;
+                document.getElementById('selectPagadoPor').appendChild(opcion);
+              }
               renderListaBuscarParticipantes(document.getElementById('inputBuscarParticipante').value);
             }
           })
@@ -1329,8 +1687,10 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     document.getElementById('inputFechaGastoGrupo').value = new Date().toISOString().slice(0, 10);
     document.getElementById('textoCategoriaGastoGrupo').textContent = 'Elegir categoria';
     document.getElementById('iconoCategoriaGastoGrupo').textContent = 'category';
+    document.getElementById('textoCuentaGastoGrupoSel').textContent = 'Elegir cuenta';
+    document.getElementById('iconoCuentaGastoGrupoSel').textContent = 'account_balance';
     document.getElementById('textoParticipantesSel').textContent = 'Elegir participantes';
-    estadoNuevoGasto = { categoria: null, subcategoria: null };
+    estadoNuevoGasto = { categoria: null, subcategoria: null, cuentaId: null };
 
     var opciones = [{ ID: 'YO', Nombre: 'Yo' }].concat(DATOS_APP.personas || []);
     document.getElementById('selectPagadoPor').innerHTML = opciones.map(function(p) {
@@ -1364,10 +1724,28 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     });
   });
 
+  document.getElementById('btnCuentaGastoGrupo').addEventListener('click', function() {
+    abrirModalCuenta(function(id, nombre, icono) {
+      estadoNuevoGasto.cuentaId = id;
+      document.getElementById('textoCuentaGastoGrupoSel').textContent = nombre;
+      document.getElementById('iconoCuentaGastoGrupoSel').textContent = icono;
+    });
+  });
+
   // ---------------------------------------------------------------
   // SELECTOR DE PARTICIPANTES (buscador, todos destildados por defecto)
+  // Generico: sirve tanto para "Nuevo gasto grupal" como para
+  // "Ticket -> Grupo", segun contextoParticipantes.
   // ---------------------------------------------------------------
+  var contextoParticipantes = 'gasto'; // 'gasto' | 'ticket'
+  var estadoParticipantesTicket = { disponibles: [], participantes: [] };
+
+  function _estadoParticipantesActual() {
+    return contextoParticipantes === 'ticket' ? estadoParticipantesTicket : estadoNuevoGasto;
+  }
+
   document.getElementById('btnElegirParticipantes').addEventListener('click', function() {
+    contextoParticipantes = 'gasto';
     document.getElementById('inputBuscarParticipante').value = '';
     renderListaBuscarParticipantes('');
     document.getElementById('modalParticipantes').style.display = 'flex';
@@ -1375,7 +1753,8 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
   function renderListaBuscarParticipantes(filtro) {
     var filtroNorm = (filtro || '').trim().toLowerCase();
-    var lista = estadoNuevoGasto.disponibles.filter(function(p) {
+    var estado = _estadoParticipantesActual();
+    var lista = estado.disponibles.filter(function(p) {
       return p.nombre.toLowerCase().indexOf(filtroNorm) !== -1;
     });
 
@@ -1389,7 +1768,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     document.querySelectorAll('.fila-buscar-participante').forEach(function(fila) {
       fila.addEventListener('click', function(e) {
         var id = fila.getAttribute('data-id');
-        var persona = estadoNuevoGasto.disponibles.find(function(p) { return p.id === id; });
+        var persona = estado.disponibles.find(function(p) { return p.id === id; });
         if (e.target.tagName !== 'INPUT') persona.seleccionado = !persona.seleccionado;
         fila.querySelector('input[type="checkbox"]').checked = persona.seleccionado;
       });
@@ -1408,22 +1787,30 @@ window.onerror = function(mensaje, url, linea, columna, error) {
   });
 
   document.getElementById('btnConfirmarParticipantes').addEventListener('click', function() {
-    var seleccionados = estadoNuevoGasto.disponibles.filter(function(p) { return p.seleccionado; });
+    var estado = _estadoParticipantesActual();
+    var seleccionados = estado.disponibles.filter(function(p) { return p.seleccionado; });
 
     // conservamos el monto ya editado de quienes seguian seleccionados
     var montosPrevios = {};
-    estadoNuevoGasto.participantes.forEach(function(p) { montosPrevios[p.id] = p.monto; });
+    estado.participantes.forEach(function(p) { montosPrevios[p.id] = p.monto; });
 
-    estadoNuevoGasto.participantes = seleccionados.map(function(p) {
+    estado.participantes = seleccionados.map(function(p) {
       return { id: p.id, nombre: p.nombre, monto: montosPrevios[p.id] || 0 };
     });
 
-    recalcularSplitIgualitario();
-    renderParticipantesGastoGrupo();
-
-    document.getElementById('textoParticipantesSel').textContent = seleccionados.length
-      ? seleccionados.length + ' seleccionado(s)'
-      : 'Elegir participantes';
+    if (contextoParticipantes === 'ticket') {
+      recalcularSplitTicket();
+      renderParticipantesTicket();
+      document.getElementById('textoParticipantesTicketSel').textContent = seleccionados.length
+        ? seleccionados.length + ' seleccionado(s)'
+        : 'Elegir participantes';
+    } else {
+      recalcularSplitIgualitario();
+      renderParticipantesGastoGrupo();
+      document.getElementById('textoParticipantesSel').textContent = seleccionados.length
+        ? seleccionados.length + ' seleccionado(s)'
+        : 'Elegir participantes';
+    }
 
     document.getElementById('modalParticipantes').style.display = 'none';
   });
@@ -1432,6 +1819,83 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     document.getElementById('inputNombrePersona').value = '';
     document.getElementById('modalNuevaPersona').style.display = 'flex';
   });
+
+  // ---------------------------------------------------------------
+  // TICKET -> GRUPO (destino Mio/Grupo dentro de la confirmacion)
+  // ---------------------------------------------------------------
+  document.querySelectorAll('#chipsDestinoTicket .chip-tipo').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('#chipsDestinoTicket .chip-tipo').forEach(function(c) { c.classList.remove('activo'); });
+      chip.classList.add('activo');
+      estadoTicket.destino = chip.getAttribute('data-destino');
+      document.getElementById('filaGrupoTicket').style.display = estadoTicket.destino === 'grupo' ? 'block' : 'none';
+
+      if (estadoTicket.destino === 'grupo') {
+        google.script.run.withSuccessHandler(function(grupos) {
+          document.getElementById('selectGrupoTicket').innerHTML = grupos.map(function(g) {
+            return '<option value="' + g.ID + '">' + escaparHtml(g.Nombre) + '</option>';
+          }).join('') || '<option value="">Sin grupos creados</option>';
+        }).withFailureHandler(mostrarError).getGrupos(true);
+
+        var opciones = [{ ID: 'YO', Nombre: 'Yo' }].concat(DATOS_APP.personas || []);
+        estadoParticipantesTicket.disponibles = opciones.map(function(p) {
+          return { id: p.ID, nombre: p.Nombre, seleccionado: false };
+        });
+        estadoParticipantesTicket.participantes = [];
+        document.getElementById('textoParticipantesTicketSel').textContent = 'Elegir participantes';
+        renderParticipantesTicket();
+      }
+    });
+  });
+
+  document.getElementById('btnElegirParticipantesTicket').addEventListener('click', function() {
+    contextoParticipantes = 'ticket';
+    document.getElementById('inputBuscarParticipante').value = '';
+    renderListaBuscarParticipantes('');
+    document.getElementById('modalParticipantes').style.display = 'flex';
+  });
+
+  function recalcularSplitTicket() {
+    var total = (estadoTicket.items || []).reduce(function(s, i) { return s + (Number(i.monto) || 0); }, 0);
+    if (!estadoParticipantesTicket.participantes.length) return;
+    var partes = Math.round((total / estadoParticipantesTicket.participantes.length) * 100) / 100;
+    estadoParticipantesTicket.participantes.forEach(function(p) { p.monto = partes; });
+  }
+
+  function renderParticipantesTicket() {
+    var total = (estadoTicket.items || []).reduce(function(s, i) { return s + (Number(i.monto) || 0); }, 0);
+
+    if (!estadoParticipantesTicket.participantes.length) {
+      document.getElementById('listaParticipantesTicket').innerHTML =
+        '<p class="label-muted" style="padding:6px 0;">Todavia no elegiste participantes.</p>';
+      document.getElementById('totalAsignadoTicket').textContent = '';
+      return;
+    }
+
+    document.getElementById('listaParticipantesTicket').innerHTML = estadoParticipantesTicket.participantes.map(function(p, i) {
+      return '<div class="fila-participante-monto">' +
+        '<span class="nombre-participante">' + escaparHtml(p.nombre) + '</span>' +
+        '<input type="text" inputmode="decimal" class="input-monto-participante" data-index="' + i + '" value="' + p.monto + '">' +
+        '</div>';
+    }).join('');
+
+    document.querySelectorAll('#listaParticipantesTicket .input-monto-participante').forEach(function(inp) {
+      inp.addEventListener('input', function() {
+        var i = Number(inp.getAttribute('data-index'));
+        estadoParticipantesTicket.participantes[i].monto = parsearMonto(inp.value);
+        actualizarTotalAsignadoTicket();
+      });
+    });
+
+    actualizarTotalAsignadoTicket();
+  }
+
+  function actualizarTotalAsignadoTicket() {
+    var total = (estadoTicket.items || []).reduce(function(s, i) { return s + (Number(i.monto) || 0); }, 0);
+    var totalAsignado = estadoParticipantesTicket.participantes.reduce(function(s, p) { return s + (Number(p.monto) || 0); }, 0);
+    document.getElementById('totalAsignadoTicket').textContent =
+      'Asignado ' + formatearMonto(totalAsignado) + ' de ' + formatearMonto(total);
+  }
 
   function recalcularSplitIgualitario() {
     var monto = parsearMonto(document.getElementById('inputMontoGastoGrupo').value);
@@ -1491,6 +1955,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
     var pagadoPor = document.getElementById('selectPagadoPor').value;
     if (pagadoPor === 'YO' && !estadoNuevoGasto.categoria) { alert('Elegi una categoria.'); return; }
+    if (pagadoPor === 'YO' && !estadoNuevoGasto.cuentaId) { alert('Elegi una cuenta.'); return; }
 
     if (!estadoNuevoGasto.participantes.length) { alert('Elegi al menos un participante.'); return; }
 
@@ -1507,6 +1972,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       pagadoPor: pagadoPor,
       categoria: estadoNuevoGasto.categoria || '',
       subcategoria: estadoNuevoGasto.subcategoria || '',
+      cuentaId: estadoNuevoGasto.cuentaId || '',
       fecha: document.getElementById('inputFechaGastoGrupo').value,
       participantes: estadoNuevoGasto.participantes.map(function(p) { return { personaId: p.id, monto: p.monto }; })
     };
@@ -1537,11 +2003,14 @@ window.onerror = function(mensaje, url, linea, columna, error) {
   function abrirModalLiquidacion(transaccion) {
     liquidacionActual = transaccion;
     liquidacionActual.categoriaElegida = null;
+    liquidacionActual.cuentaId = null;
     document.getElementById('tituloModalLiquidacion').textContent = transaccion.deNombre + ' \u2192 ' + transaccion.aNombre;
     document.getElementById('inputMontoLiquidacion').value = transaccion.monto;
     document.getElementById('inputFechaLiquidacion').value = new Date().toISOString().slice(0, 10);
     document.getElementById('textoCategoriaLiquidacion').textContent = 'Elegir categoria';
     document.getElementById('iconoCategoriaLiquidacion').textContent = 'category';
+    document.getElementById('textoCuentaLiquidacionSel').textContent = 'Elegir cuenta';
+    document.getElementById('iconoCuentaLiquidacionSel').textContent = 'account_balance';
     document.getElementById('filaCategoriaLiquidacion').style.display = transaccion.dePersonaId === 'YO' ? 'block' : 'none';
     document.getElementById('modalLiquidacion').style.display = 'flex';
   }
@@ -1551,6 +2020,14 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       liquidacionActual.categoriaElegida = nombre;
       document.getElementById('textoCategoriaLiquidacion').textContent = nombre;
       document.getElementById('iconoCategoriaLiquidacion').textContent = icono;
+    });
+  });
+
+  document.getElementById('btnCuentaLiquidacion').addEventListener('click', function() {
+    abrirModalCuenta(function(id, nombre, icono) {
+      liquidacionActual.cuentaId = id;
+      document.getElementById('textoCuentaLiquidacionSel').textContent = nombre;
+      document.getElementById('iconoCuentaLiquidacionSel').textContent = icono;
     });
   });
 
@@ -1568,6 +2045,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       alert('Elegi una categoria.');
       return;
     }
+    if (!liquidacionActual.cuentaId) { alert('Elegi una cuenta.'); return; }
 
     var datos = {
       grupoId: grupoActualId,
@@ -1575,7 +2053,8 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       aPersonaId: liquidacionActual.aPersonaId,
       monto: monto,
       fecha: document.getElementById('inputFechaLiquidacion').value,
-      categoria: liquidacionActual.categoriaElegida || ''
+      categoria: liquidacionActual.categoriaElegida || '',
+      cuentaId: liquidacionActual.cuentaId
     };
 
     google.script.run
