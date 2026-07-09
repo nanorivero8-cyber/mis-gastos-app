@@ -50,6 +50,11 @@
           <div id="listaCategorias" class="lista-categorias"></div>
         </div>
 
+        <button type="button" class="btn-secundario" id="btnVerMovimientos" style="margin-bottom:8px;">
+          <span class="material-symbols-rounded icon-sm" style="vertical-align:-3px;">search</span>
+          Buscar movimientos
+        </button>
+
         <button type="button" class="btn-secundario" id="btnVerResumenGeneral" style="margin-bottom:8px;">
           <span class="material-symbols-rounded icon-sm" style="vertical-align:-3px;">insights</span>
           Resumen general
@@ -104,7 +109,7 @@
           </div>
 
           <label class="campo-label">Monto</label>
-          <input type="text" id="inputMonto" inputmode="decimal" placeholder="0" class="input-monto" required>
+          <div class="fila-monto-calc"><input type="text" id="inputMonto" inputmode="decimal" placeholder="0" class="input-monto" required><button type="button" class="btn-calc-mini" data-target="inputMonto" aria-label="Calculadora"><span class="material-symbols-rounded">calculate</span></button></div>
 
           <label class="campo-label">Descripcion</label>
           <input type="text" id="inputDescripcion" placeholder="Ej: Supermercado del sabado">
@@ -302,6 +307,47 @@
         <p class="titulo-seccion">Proyeccion mes a mes</p>
         <div id="listaCuotas"></div>
       </div>
+      <div id="vistaMovimientos" class="vista" style="display:none;">
+        <div class="header-subvista">
+          <button type="button" class="btn-cerrar" id="btnCerrarMovimientos" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+          <p class="titulo-subvista">Buscar movimientos</p>
+          <div style="width:36px;"></div>
+        </div>
+
+        <input type="text" id="inputBuscarMovimientoTexto" placeholder="Buscar por texto (ej: milanesa)...">
+
+        <div class="chips-tipo" id="chipsTipoMovimiento" style="margin-top:10px;">
+          <button type="button" class="chip-tipo activo" data-tipo="">Todos</button>
+          <button type="button" class="chip-tipo" data-tipo="Fijo">Fijo</button>
+          <button type="button" class="chip-tipo" data-tipo="Variable">Variable</button>
+          <button type="button" class="chip-tipo" data-tipo="Ahorro">Ahorro</button>
+          <button type="button" class="chip-tipo" data-tipo="Ingreso">Ingreso</button>
+        </div>
+
+        <label class="campo-label">Categoria</label>
+        <select id="selectFiltroCategoria"><option value="">Todas</option></select>
+
+        <label class="campo-label">Cuenta</label>
+        <select id="selectFiltroCuenta"><option value="">Todas</option></select>
+
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <label class="campo-label">Monto minimo</label>
+            <input type="text" inputmode="decimal" id="inputMontoMinFiltro" placeholder="0">
+          </div>
+          <div style="flex:1;">
+            <label class="campo-label">Monto maximo</label>
+            <input type="text" inputmode="decimal" id="inputMontoMaxFiltro" placeholder="0">
+          </div>
+        </div>
+
+        <button type="button" class="btn-guardar" id="btnBuscarMovimientos" style="margin-top:14px;">Buscar</button>
+
+        <div id="listaMovimientosResultado" style="margin-top:16px;"></div>
+      </div>
+
       <div id="vistaResumenGeneral" class="vista" style="display:none;">
         <div class="header-subvista">
           <button type="button" class="btn-cerrar" id="btnCerrarResumenGeneral" aria-label="Cerrar">
@@ -359,6 +405,46 @@
       </div>
     </div>
 
+    <div id="modalCalculadora" class="modal-overlay" style="display:none;">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <p class="modal-titulo">Calculadora</p>
+          <button type="button" class="btn-cerrar" id="btnCerrarCalculadora" aria-label="Cerrar">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+
+        <div class="calc-display" id="calcDisplay">0</div>
+
+        <div class="calc-grilla">
+          <button type="button" class="calc-btn calc-btn-op" data-tecla="C">C</button>
+          <button type="button" class="calc-btn calc-btn-op" data-tecla="borrar">⌫</button>
+          <button type="button" class="calc-btn calc-btn-op" data-tecla="/">÷</button>
+          <button type="button" class="calc-btn calc-btn-op" data-tecla="*">×</button>
+
+          <button type="button" class="calc-btn" data-tecla="7">7</button>
+          <button type="button" class="calc-btn" data-tecla="8">8</button>
+          <button type="button" class="calc-btn" data-tecla="9">9</button>
+          <button type="button" class="calc-btn calc-btn-op" data-tecla="-">−</button>
+
+          <button type="button" class="calc-btn" data-tecla="4">4</button>
+          <button type="button" class="calc-btn" data-tecla="5">5</button>
+          <button type="button" class="calc-btn" data-tecla="6">6</button>
+          <button type="button" class="calc-btn calc-btn-op" data-tecla="+">+</button>
+
+          <button type="button" class="calc-btn" data-tecla="1">1</button>
+          <button type="button" class="calc-btn" data-tecla="2">2</button>
+          <button type="button" class="calc-btn" data-tecla="3">3</button>
+          <button type="button" class="calc-btn calc-btn-igual" data-tecla="=" style="grid-row: span 2;">=</button>
+
+          <button type="button" class="calc-btn" data-tecla="0" style="grid-column: span 2;">0</button>
+          <button type="button" class="calc-btn" data-tecla=".">,</button>
+        </div>
+
+        <button type="button" class="btn-guardar" id="btnUsarResultadoCalc">Usar este monto</button>
+      </div>
+    </div>
+
     <div id="modalNuevaCompraCuotas" class="modal-overlay" style="display:none;">
       <div class="modal-panel">
         <div class="modal-header">
@@ -379,7 +465,7 @@
         </button>
 
         <label class="campo-label">Monto total de la compra</label>
-        <input type="text" inputmode="decimal" id="inputMontoTotalCompraCuotas" placeholder="0">
+        <div class="fila-monto-calc"><input type="text" inputmode="decimal" id="inputMontoTotalCompraCuotas" placeholder="0"><button type="button" class="btn-calc-mini" data-target="inputMontoTotalCompraCuotas" aria-label="Calculadora"><span class="material-symbols-rounded">calculate</span></button></div>
 
         <label class="campo-label">Cantidad de cuotas</label>
         <input type="number" id="inputCantidadCuotasCompra" placeholder="12">
@@ -450,7 +536,7 @@
           </button>
         </div>
         <label class="campo-label">Monto (ajustalo si el banco cobro distinto)</label>
-        <input type="text" inputmode="decimal" id="inputMontoPagoCuota">
+        <div class="fila-monto-calc"><input type="text" inputmode="decimal" id="inputMontoPagoCuota"><button type="button" class="btn-calc-mini" data-target="inputMontoPagoCuota" aria-label="Calculadora"><span class="material-symbols-rounded">calculate</span></button></div>
         <label class="campo-label">Fecha</label>
         <input type="date" id="inputFechaPagoCuota">
         <label class="campo-label">Cuenta</label>
@@ -488,7 +574,7 @@
         <input type="color" id="inputColorCuenta" style="height:44px;padding:4px;">
 
         <label class="campo-label" id="labelSaldoCuenta">Saldo inicial</label>
-        <input type="text" inputmode="decimal" id="inputSaldoCuenta" placeholder="0">
+        <div class="fila-monto-calc"><input type="text" inputmode="decimal" id="inputSaldoCuenta" placeholder="0"><button type="button" class="btn-calc-mini" data-target="inputSaldoCuenta" aria-label="Calculadora"><span class="material-symbols-rounded">calculate</span></button></div>
 
         <button type="button" class="btn-guardar" id="btnGuardarCuenta">Guardar cuenta</button>
       </div>
@@ -563,7 +649,7 @@
         <input type="text" id="inputDescripcionGastoGrupo" placeholder="Ej: Carne">
 
         <label class="campo-label">Monto total</label>
-        <input type="text" inputmode="decimal" id="inputMontoGastoGrupo" placeholder="0">
+        <div class="fila-monto-calc"><input type="text" inputmode="decimal" id="inputMontoGastoGrupo" placeholder="0"><button type="button" class="btn-calc-mini" data-target="inputMontoGastoGrupo" aria-label="Calculadora"><span class="material-symbols-rounded">calculate</span></button></div>
 
         <label class="campo-label">Quien pago</label>
         <select id="selectPagadoPor"></select>
@@ -628,7 +714,7 @@
         </div>
 
         <label class="campo-label">Monto</label>
-        <input type="text" inputmode="decimal" id="inputMontoLiquidacion">
+        <div class="fila-monto-calc"><input type="text" inputmode="decimal" id="inputMontoLiquidacion"><button type="button" class="btn-calc-mini" data-target="inputMontoLiquidacion" aria-label="Calculadora"><span class="material-symbols-rounded">calculate</span></button></div>
 
         <div id="filaCategoriaLiquidacion" style="display:none;">
           <label class="campo-label">Categoria</label>

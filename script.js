@@ -7,7 +7,7 @@
 // de Apps Script (Implementar -> Administrar implementaciones -> copiar
 // la URL que termina en /exec).
 // =====================================================================
-var APPS_SCRIPT_API_URL = 'https://script.google.com/macros/s/AKfycbxhDZ-P5RrJcgPrJVGfagZ8-S-44LQS49gNufhjwMROdFy9YNq974TGfilkucU9guvgpQ/exec';
+var APPS_SCRIPT_API_URL = 'PEGA_ACA_TU_URL_DE_APPS_SCRIPT/exec';
 
 function _crearLlamadaApi() {
   var successHandler = null;
@@ -237,6 +237,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     document.getElementById('vistaCuotas').style.display = 'none';
     document.getElementById('vistaCuentas').style.display = 'none';
     document.getElementById('vistaResumenGeneral').style.display = 'none';
+    document.getElementById('vistaMovimientos').style.display = 'none';
     mostrarTab(tabActual);
   }
 
@@ -1225,6 +1226,181 @@ window.onerror = function(mensaje, url, linea, columna, error) {
         alert('No se pudo guardar: ' + (error.message || error));
       })
       .agregarCompraCuotas(datos);
+  });
+
+  // ---------------------------------------------------------------
+  // VISTA: BUSCAR MOVIMIENTOS
+  // ---------------------------------------------------------------
+  var filtroTipoMovimiento = '';
+
+  document.getElementById('btnVerMovimientos').addEventListener('click', function() {
+    document.querySelectorAll('.vista').forEach(function(v) { v.style.display = 'none'; });
+    document.getElementById('vistaMovimientos').style.display = 'block';
+
+    document.getElementById('inputBuscarMovimientoTexto').value = '';
+    document.getElementById('inputMontoMinFiltro').value = '';
+    document.getElementById('inputMontoMaxFiltro').value = '';
+    filtroTipoMovimiento = '';
+    document.querySelectorAll('#chipsTipoMovimiento .chip-tipo').forEach(function(c) {
+      c.classList.toggle('activo', c.getAttribute('data-tipo') === '');
+    });
+
+    var nombresCategoria = Array.from(new Set((DATOS_APP.categorias || []).map(function(c) { return c.Nombre; })));
+    document.getElementById('selectFiltroCategoria').innerHTML = '<option value="">Todas</option>' +
+      nombresCategoria.map(function(n) { return '<option value="' + escaparHtml(n) + '">' + escaparHtml(n) + '</option>'; }).join('');
+
+    document.getElementById('selectFiltroCuenta').innerHTML = '<option value="">Todas</option>' +
+      (DATOS_APP.cuentas || []).map(function(c) { return '<option value="' + c.ID + '">' + escaparHtml(c.Nombre) + '</option>'; }).join('');
+
+    buscarMovimientosAhora();
+  });
+
+  document.getElementById('btnCerrarMovimientos').addEventListener('click', cerrarOverlay);
+
+  document.querySelectorAll('#chipsTipoMovimiento .chip-tipo').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('#chipsTipoMovimiento .chip-tipo').forEach(function(c) { c.classList.remove('activo'); });
+      chip.classList.add('activo');
+      filtroTipoMovimiento = chip.getAttribute('data-tipo');
+    });
+  });
+
+  document.getElementById('btnBuscarMovimientos').addEventListener('click', buscarMovimientosAhora);
+
+  function buscarMovimientosAhora() {
+    document.getElementById('listaMovimientosResultado').innerHTML =
+      '<div class="vista-cargando visible" style="padding:20px 0;"><span class="material-symbols-rounded icon-spin">progress_activity</span></div>';
+
+    var filtros = {
+      texto: document.getElementById('inputBuscarMovimientoTexto').value.trim(),
+      tipo: filtroTipoMovimiento,
+      categoria: document.getElementById('selectFiltroCategoria').value,
+      cuentaId: document.getElementById('selectFiltroCuenta').value,
+      montoMin: parsearMonto(document.getElementById('inputMontoMinFiltro').value) || null,
+      montoMax: parsearMonto(document.getElementById('inputMontoMaxFiltro').value) || null
+    };
+
+    google.script.run
+      .withSuccessHandler(renderMovimientosResultado)
+      .withFailureHandler(mostrarError)
+      .buscarMovimientos(filtros);
+  }
+
+  function renderMovimientosResultado(lista) {
+    if (!lista.length) {
+      document.getElementById('listaMovimientosResultado').innerHTML =
+        '<p class="label-muted" style="text-align:center;padding:20px 0;">No se encontraron movimientos con esos filtros.</p>';
+      return;
+    }
+
+    var infoCategorias = {};
+    (DATOS_APP.categorias || []).forEach(function(c) { infoCategorias[c.Nombre] = c; });
+
+    document.getElementById('listaMovimientosResultado').innerHTML = lista.map(function(m) {
+      var color = COLORES_CATEGORIA[m.categoria] || '#5F5E5A';
+      var icono = (infoCategorias[m.categoria] && infoCategorias[m.categoria].Icono) || 'category';
+      var esIngreso = m.tipo === 'Ingreso';
+      var subnombre = [m.subcategoria, m.cuentaNombre, formatearFecha(m.fecha)].filter(Boolean).join(' · ');
+
+      return '<div class="fila-movimiento" data-id="' + m.id + '">' +
+        '<div class="icono-categoria" style="background:' + color + '22;">' +
+          '<span class="material-symbols-rounded" style="color:' + color + ';">' + icono + '</span>' +
+        '</div>' +
+        '<div class="nombre-cat">' +
+          '<p class="nombre">' + escaparHtml(m.descripcion) + '</p>' +
+          '<p class="subnombre">' + escaparHtml(subnombre) + '</p>' +
+        '</div>' +
+        '<span class="monto-mov ' + (esIngreso ? 'ingreso' : 'gasto') + '">' + (esIngreso ? '+' : '-') + formatearMonto(m.monto) + '</span>' +
+        '<button type="button" class="btn-borrar-item" data-id="' + m.id + '" aria-label="Eliminar">' +
+          '<span class="material-symbols-rounded icon-sm">delete</span>' +
+        '</button>' +
+        '</div>';
+    }).join('');
+
+    document.querySelectorAll('#listaMovimientosResultado .btn-borrar-item').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id = btn.getAttribute('data-id');
+        mostrarConfirmacion('¿Eliminar este movimiento?', function() {
+          google.script.run
+            .withSuccessHandler(function() { buscarMovimientosAhora(); cargarDashboard(); })
+            .withFailureHandler(mostrarError)
+            .eliminarMovimiento(id);
+        });
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // MINI CALCULADORA (reutilizable desde cualquier campo de monto)
+  // ---------------------------------------------------------------
+  var calcElementoDestino = null;
+  var calcExpresion = '';
+
+  document.querySelectorAll('.btn-calc-mini').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var idDestino = btn.getAttribute('data-target');
+      calcElementoDestino = document.getElementById(idDestino);
+      calcExpresion = (calcElementoDestino.value || '').toString().replace(',', '.');
+      // si el valor actual no es un numero simple (ej quedo vacio), arrancamos de cero
+      if (!/^\d*\.?\d*$/.test(calcExpresion)) calcExpresion = '';
+      actualizarDisplayCalculadora();
+      document.getElementById('modalCalculadora').style.display = 'flex';
+    });
+  });
+
+  function actualizarDisplayCalculadora() {
+    document.getElementById('calcDisplay').textContent = calcExpresion || '0';
+  }
+
+  document.querySelectorAll('.calc-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var tecla = btn.getAttribute('data-tecla');
+
+      if (tecla === 'C') {
+        calcExpresion = '';
+      } else if (tecla === 'borrar') {
+        calcExpresion = calcExpresion.slice(0, -1);
+      } else if (tecla === '=') {
+        calcExpresion = _evaluarExpresionCalc(calcExpresion);
+      } else if (tecla === '.') {
+        calcExpresion += '.';
+      } else {
+        calcExpresion += tecla;
+      }
+
+      actualizarDisplayCalculadora();
+    });
+  });
+
+  function _evaluarExpresionCalc(expresion) {
+    if (!expresion) return '';
+    try {
+      // la expresion solo puede contener digitos, punto y + - * / (viene
+      // exclusivamente de los botones de la calculadora, nunca de texto
+      // libre tipeado), asi que evaluarla asi es seguro.
+      if (!/^[\d+\-*/.]+$/.test(expresion)) return expresion;
+      var resultado = Function('"use strict"; return (' + expresion + ')')();
+      if (isNaN(resultado) || !isFinite(resultado)) return expresion;
+      return String(Math.round(resultado * 100) / 100);
+    } catch (e) {
+      return expresion;
+    }
+  }
+
+  document.getElementById('btnCerrarCalculadora').addEventListener('click', function() {
+    document.getElementById('modalCalculadora').style.display = 'none';
+  });
+  document.getElementById('modalCalculadora').addEventListener('click', function(e) {
+    if (e.target.id === 'modalCalculadora') e.target.style.display = 'none';
+  });
+
+  document.getElementById('btnUsarResultadoCalc').addEventListener('click', function() {
+    var resultado = _evaluarExpresionCalc(calcExpresion);
+    if (calcElementoDestino && resultado !== '') {
+      calcElementoDestino.value = resultado;
+      calcElementoDestino.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    document.getElementById('modalCalculadora').style.display = 'none';
   });
 
   // ---------------------------------------------------------------

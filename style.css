@@ -226,6 +226,95 @@
     margin-top: 2px;
   }
 
+  .fila-monto-calc {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .fila-monto-calc input { flex: 1; }
+
+  .btn-calc-mini {
+    background: var(--card-bg-2);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--celeste);
+    cursor: pointer;
+  }
+
+  .calc-display {
+    background: var(--card-bg-2);
+    border-radius: 10px;
+    padding: 18px 16px;
+    text-align: right;
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .calc-grilla {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .calc-btn {
+    height: 52px;
+    border-radius: 10px;
+    border: 0.5px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  .calc-btn-op {
+    background: var(--card-bg-2);
+    color: var(--celeste);
+  }
+
+  .calc-btn-igual {
+    background: var(--celeste);
+    color: #FFFFFF;
+    border-color: var(--celeste);
+  }
+
+  .fila-movimiento {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .fila-movimiento:last-child { border-bottom: none; }
+
+  .fila-movimiento .nombre-cat { flex: 1; min-width: 0; }
+  .fila-movimiento .nombre { font-size: 13px; color: var(--text-primary); margin: 0; }
+  .fila-movimiento .subnombre { font-size: 11px; color: var(--text-muted); margin: 2px 0 0; }
+
+  .fila-movimiento .monto-mov {
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font-heading);
+    flex-shrink: 0;
+  }
+
+  .fila-movimiento .monto-mov.ingreso { color: var(--verde); }
+  .fila-movimiento .monto-mov.gasto { color: var(--rojo); }
+
   .fila-categoria .nombre, .fila-persona .nombre {
     font-size: 13px;
     flex: 1;
@@ -456,7 +545,7 @@
     z-index: 1000;
   }
 
-  #modalSelector, #modalConfirmar, #modalParticipantes { z-index: 1100; }
+  #modalSelector, #modalConfirmar, #modalParticipantes, #modalCalculadora { z-index: 1100; }
   #modalNuevaPersona { z-index: 1200; }
 
   .modal-panel {
