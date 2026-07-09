@@ -139,7 +139,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
   function mostrarError(error) {
     mostrarCargando(false);
-    alert('No se pudo cargar la informacion: ' + (error.message || error));
+    alert('No se pudo cargar la información: ' + (error.message || error));
   }
 
   function pintarDashboard(datos) {
@@ -273,7 +273,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       c.classList.toggle('activo', c.getAttribute('data-tipo') === estadoForm.tipo);
     });
 
-    document.getElementById('textoCategoriaSel').textContent = 'Elegir categoria';
+    document.getElementById('textoCategoriaSel').textContent = 'Elegir categoría';
     document.getElementById('iconoCategoriaSel').textContent = 'category';
     document.getElementById('filaSubcategoria').style.display = 'none';
     document.getElementById('textoCuentaSel').textContent = 'Elegir cuenta';
@@ -303,7 +303,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       // al cambiar el tipo, la categoria elegida deja de tener sentido
       estadoForm.categoria = null;
       estadoForm.subcategoria = null;
-      document.getElementById('textoCategoriaSel').textContent = 'Elegir categoria';
+      document.getElementById('textoCategoriaSel').textContent = 'Elegir categoría';
       document.getElementById('iconoCategoriaSel').textContent = 'category';
       document.getElementById('filaSubcategoria').style.display = 'none';
     });
@@ -332,7 +332,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
         .filter(function(c) { return c.Nombre === nombre && c.Subcategoria; });
       if (subcategorias.length > 0) {
         document.getElementById('filaSubcategoria').style.display = 'block';
-        document.getElementById('textoSubcategoriaSel').textContent = 'Elegir subcategoria';
+        document.getElementById('textoSubcategoriaSel').textContent = 'Elegir subcategoría';
       } else {
         document.getElementById('filaSubcategoria').style.display = 'none';
       }
@@ -356,7 +356,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     });
     var lista = Object.values(vistas);
 
-    document.getElementById('modalTitulo').textContent = 'Elegir categoria';
+    document.getElementById('modalTitulo').textContent = 'Elegir categoría';
     document.getElementById('modalLista').innerHTML = lista.map(function(c) {
       var color = COLORES_CATEGORIA[c.Nombre] || '#5F5E5A';
       return '<div class="modal-item" data-nombre="' + c.Nombre + '" data-icono="' + c.Icono + '">' +
@@ -384,7 +384,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       .filter(function(c) { return c.Nombre === nombreCategoria && c.Subcategoria; })
       .map(function(c) { return c.Subcategoria; });
 
-    document.getElementById('modalTitulo').textContent = 'Elegir subcategoria';
+    document.getElementById('modalTitulo').textContent = 'Elegir subcategoría';
     document.getElementById('modalLista').innerHTML = subcategorias.map(function(s) {
       return '<div class="modal-item" data-nombre="' + s + '">' +
         '<span class="nombre">' + s + '</span>' +
@@ -408,7 +408,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     var lista = DATOS_APP.cuentas || [];
 
     if (!lista.length) {
-      alert('Todavia no cargaste ninguna cuenta. Anda a "Mis cuentas" desde el inicio para crear una.');
+      alert('Todavía no cargaste ninguna cuenta. Andá a "Mis cuentas" desde el inicio para crear una.');
       return;
     }
 
@@ -537,7 +537,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       var icono = (infoCategorias[item.categoria] && infoCategorias[item.categoria].Icono) || 'category';
       var textoCategoria = item.categoria
         ? (item.subcategoria ? item.categoria + ' - ' + item.subcategoria : item.categoria)
-        : 'Elegir categoria';
+        : 'Elegir categoría';
 
       return '<div class="item-ticket" data-index="' + index + '">' +
         '<div class="item-ticket-top">' +
@@ -612,9 +612,9 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     e.preventDefault();
 
     var monto = parsearMonto(document.getElementById('inputMonto').value);
-    if (!monto || monto <= 0) { alert('Ingresa un monto valido.'); return; }
-    if (!estadoForm.categoria) { alert('Elegi una categoria.'); return; }
-    if (!estadoForm.cuentaId) { alert('Elegi una cuenta.'); return; }
+    if (!monto || monto <= 0) { alert('Ingresa un monto válido.'); return; }
+    if (!estadoForm.categoria) { alert('Elegí una categoría.'); return; }
+    if (!estadoForm.cuentaId) { alert('Elegí una cuenta.'); return; }
 
     var datos = {
       fecha: document.getElementById('inputFecha').value,
@@ -652,19 +652,19 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     if (!estadoTicket.items.length) { alert('No hay items para guardar.'); return; }
 
     var sinCategoria = estadoTicket.items.some(function(i) { return !i.categoria; });
-    if (sinCategoria) { alert('Todos los items necesitan una categoria.'); return; }
+    if (sinCategoria) { alert('Todos los items necesitan una categoría.'); return; }
 
     var sinMonto = estadoTicket.items.some(function(i) { return !i.monto || i.monto <= 0; });
-    if (sinMonto) { alert('Todos los items necesitan un monto valido.'); return; }
+    if (sinMonto) { alert('Todos los items necesitan un monto válido.'); return; }
 
-    if (!estadoTicket.cuentaId) { alert('Elegi una cuenta.'); return; }
+    if (!estadoTicket.cuentaId) { alert('Elegí una cuenta.'); return; }
 
     var btnGuardar = document.getElementById('btnGuardarTicket');
 
     if (estadoTicket.destino === 'grupo') {
       var grupoId = document.getElementById('selectGrupoTicket').value;
-      if (!grupoId) { alert('Elegi un grupo.'); return; }
-      if (!estadoParticipantesTicket.participantes.length) { alert('Elegi al menos un participante.'); return; }
+      if (!grupoId) { alert('Elegí un grupo.'); return; }
+      if (!estadoParticipantesTicket.participantes.length) { alert('Elegí al menos un participante.'); return; }
 
       var totalTicket = estadoTicket.items.reduce(function(s, i) { return s + (Number(i.monto) || 0); }, 0);
       var totalAsignado = estadoParticipantesTicket.participantes.reduce(function(s, p) { return s + (Number(p.monto) || 0); }, 0);
@@ -774,7 +774,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
   function renderGruposTab(lista) {
     if (!lista.length) {
       document.getElementById('listaGruposTab').innerHTML =
-        '<p class="label-muted" style="text-align:center;padding:30px 0;">Todavia no creaste ningun grupo. Toca el + de arriba para armar uno.</p>';
+        '<p class="label-muted" style="text-align:center;padding:30px 0;">Todavía no creaste ningún grupo. Tocá el + de arriba para armar uno.</p>';
       return;
     }
 
@@ -905,7 +905,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
           '<span class="material-symbols-rounded icon-sm">delete</span>' +
         '</button>' +
         '</div>';
-    }).join('')) || '<p class="label-muted">Todavia no hay gastos en este grupo.</p>';
+    }).join('')) || '<p class="label-muted">Todavía no hay gastos en este grupo.</p>';
 
     document.querySelectorAll('#listaGastosGrupo .btn-borrar-item').forEach(function(btn) {
       btn.addEventListener('click', function() {
@@ -1013,7 +1013,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
   function renderComprasCuotas(compras) {
     if (!compras.length) {
       document.getElementById('listaComprasCuotas').innerHTML =
-        '<p class="label-muted" style="padding:10px 0;">Todavia no cargaste ninguna compra en cuotas.</p>';
+        '<p class="label-muted" style="padding:10px 0;">Todavía no cargaste ninguna compra en cuotas.</p>';
       return;
     }
 
@@ -1123,8 +1123,8 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
   document.getElementById('btnConfirmarPagoCuota').addEventListener('click', function() {
     var monto = parsearMonto(document.getElementById('inputMontoPagoCuota').value);
-    if (!monto || monto <= 0) { alert('Ingresa un monto valido.'); return; }
-    if (!cuotaSeleccionada.cuentaId) { alert('Elegi una cuenta.'); return; }
+    if (!monto || monto <= 0) { alert('Ingresa un monto válido.'); return; }
+    if (!cuotaSeleccionada.cuentaId) { alert('Elegí una cuenta.'); return; }
 
     google.script.run
       .withSuccessHandler(function() {
@@ -1145,7 +1145,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     document.getElementById('inputCantidadCuotasCompra').value = '';
     document.getElementById('inputCuotaInicialCompra').value = '1';
     document.getElementById('inputMesPrimeraCuotaCompra').value = new Date().toISOString().slice(0, 7);
-    document.getElementById('textoCategoriaCompraCuotas').textContent = 'Elegir categoria';
+    document.getElementById('textoCategoriaCompraCuotas').textContent = 'Elegir categoría';
     document.getElementById('iconoCategoriaCompraCuotas').textContent = 'category';
     document.getElementById('previewMontoCuotaCompra').textContent = '';
     categoriaCompraCuotas = null;
@@ -1184,8 +1184,8 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
   document.getElementById('btnGuardarCompraCuotas').addEventListener('click', function() {
     var descripcion = document.getElementById('inputDescripcionCompraCuotas').value.trim();
-    if (!descripcion) { alert('Ingresa una descripcion.'); return; }
-    if (!categoriaCompraCuotas) { alert('Elegi una categoria.'); return; }
+    if (!descripcion) { alert('Ingresa una descripción.'); return; }
+    if (!categoriaCompraCuotas) { alert('Elegí una categoría.'); return; }
 
     var montoTotalCompra = parsearMonto(document.getElementById('inputMontoTotalCompraCuotas').value);
     if (!montoTotalCompra || montoTotalCompra <= 0) { alert('Ingresa el monto total de la compra.'); return; }
@@ -1197,7 +1197,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     if (cuotaInicial > cantidadCuotas) { alert('La cuota inicial no puede ser mayor a la cantidad de cuotas.'); return; }
 
     var mesPrimeraCuota = document.getElementById('inputMesPrimeraCuotaCompra').value;
-    if (!mesPrimeraCuota) { alert('Elegi el mes de la primera cuota.'); return; }
+    if (!mesPrimeraCuota) { alert('Elegí el mes de la primera cuota.'); return; }
 
     var datos = {
       descripcion: descripcion,
@@ -1301,7 +1301,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
       var icono = (infoCategorias[m.categoria] && infoCategorias[m.categoria].Icono) || 'category';
       var esIngreso = m.tipo === 'Ingreso';
       var subnombre = [m.categoria, m.subcategoria, formatearFecha(m.fecha)].filter(Boolean).join(' · ');
-      var titulo = m.descripcion || m.categoria || 'Sin descripcion';
+      var titulo = m.descripcion || m.categoria || 'Sin descripción';
 
       return '<div class="fila-movimiento" data-id="' + m.id + '">' +
         '<div class="icono-categoria" style="background:' + color + '22;">' +
@@ -1329,10 +1329,10 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     movimientoEnDetalleId = m.id;
     var esIngreso = m.tipo === 'Ingreso';
     var filas = [
-      ['Descripcion', m.descripcion || '(sin descripcion)'],
+      ['Descripción', m.descripcion || '(sin descripción)'],
       ['Tipo', m.tipo],
-      ['Categoria', m.categoria],
-      ['Subcategoria', m.subcategoria || '—'],
+      ['Categoría', m.categoria],
+      ['Subcategoría', m.subcategoria || '—'],
       ['Comercio', m.comercio || '—'],
       ['Cuenta', m.cuentaNombre || '—'],
       ['Medio de pago', m.medioPago || '—'],
@@ -1487,7 +1487,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
     document.getElementById('listaTopCategorias').innerHTML = resumen.topCategorias.map(function(tc) {
       return filaCategoria(tc.categoria, tc.monto, infoCategorias[tc.categoria]);
-    }).join('') || '<p class="label-muted" style="text-align:center;padding:20px 0;">Sin gastos registrados este anio.</p>';
+    }).join('') || '<p class="label-muted" style="text-align:center;padding:20px 0;">Sin gastos registrados este año.</p>';
   }
 
   function formatearMontoCorto(numero) {
@@ -1528,7 +1528,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
     if (!lista.length) {
       document.getElementById('listaCuentasTab').innerHTML =
-        '<p class="label-muted" style="text-align:center;padding:20px 0;">Todavia no cargaste ninguna cuenta.</p>';
+        '<p class="label-muted" style="text-align:center;padding:20px 0;">Todavía no cargaste ninguna cuenta.</p>';
       return;
     }
 
@@ -1705,7 +1705,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     });
 
     document.getElementById('listaCategoriasTab').innerHTML = html ||
-      '<p class="label-muted" style="text-align:center;padding:30px 0;">Todavia no hay categorias.</p>';
+      '<p class="label-muted" style="text-align:center;padding:30px 0;">Todavía no hay categorías.</p>';
 
     document.querySelectorAll('.switch-activo').forEach(function(sw) {
       sw.addEventListener('change', function() {
@@ -1772,7 +1772,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
   function abrirModalEditarCategoria(cat) {
     categoriaEnEdicionId = cat ? cat.ID : null;
-    document.getElementById('tituloModalEditarCategoria').textContent = cat ? 'Editar categoria' : 'Nueva categoria';
+    document.getElementById('tituloModalEditarCategoria').textContent = cat ? 'Editar categoría' : 'Nueva categoría';
     document.getElementById('inputNombreCategoria').value = cat ? cat.Nombre : '';
     document.getElementById('inputSubcategoriaCategoria').value = cat ? cat.Subcategoria : '';
     document.getElementById('inputIconoCategoria').value = cat ? cat.Icono : 'category';
@@ -1831,7 +1831,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
     var terminar = function() {
       btn.disabled = false;
-      btn.textContent = 'Guardar categoria';
+      btn.textContent = 'Guardar categoría';
       document.getElementById('modalEditarCategoria').style.display = 'none';
       cargarCategoriasTab();
       refrescarCacheCategorias();
@@ -1839,7 +1839,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
     var manejarError = function(error) {
       btn.disabled = false;
-      btn.textContent = 'Guardar categoria';
+      btn.textContent = 'Guardar categoría';
       alert('No se pudo guardar: ' + (error.message || error));
     };
 
@@ -1901,7 +1901,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     document.getElementById('inputDescripcionGastoGrupo').value = '';
     document.getElementById('inputMontoGastoGrupo').value = '';
     document.getElementById('inputFechaGastoGrupo').value = new Date().toISOString().slice(0, 10);
-    document.getElementById('textoCategoriaGastoGrupo').textContent = 'Elegir categoria';
+    document.getElementById('textoCategoriaGastoGrupo').textContent = 'Elegir categoría';
     document.getElementById('iconoCategoriaGastoGrupo').textContent = 'category';
     document.getElementById('textoCuentaGastoGrupoSel').textContent = 'Elegir cuenta';
     document.getElementById('iconoCuentaGastoGrupoSel').textContent = 'account_balance';
@@ -2083,7 +2083,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
     if (!estadoParticipantesTicket.participantes.length) {
       document.getElementById('listaParticipantesTicket').innerHTML =
-        '<p class="label-muted" style="padding:6px 0;">Todavia no elegiste participantes.</p>';
+        '<p class="label-muted" style="padding:6px 0;">Todavía no elegiste participantes.</p>';
       document.getElementById('totalAsignadoTicket').textContent = '';
       return;
     }
@@ -2123,7 +2123,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
   function renderParticipantesGastoGrupo() {
     if (!estadoNuevoGasto.participantes.length) {
       document.getElementById('listaParticipantesGastoGrupo').innerHTML =
-        '<p class="label-muted" style="padding:6px 0;">Todavia no elegiste participantes.</p>';
+        '<p class="label-muted" style="padding:6px 0;">Todavía no elegiste participantes.</p>';
       actualizarTotalAsignadoGastoGrupo();
       return;
     }
@@ -2167,13 +2167,13 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
   document.getElementById('btnGuardarGastoGrupo').addEventListener('click', function() {
     var monto = parsearMonto(document.getElementById('inputMontoGastoGrupo').value);
-    if (!monto || monto <= 0) { alert('Ingresa un monto valido.'); return; }
+    if (!monto || monto <= 0) { alert('Ingresa un monto válido.'); return; }
 
     var pagadoPor = document.getElementById('selectPagadoPor').value;
-    if (pagadoPor === 'YO' && !estadoNuevoGasto.categoria) { alert('Elegi una categoria.'); return; }
-    if (pagadoPor === 'YO' && !estadoNuevoGasto.cuentaId) { alert('Elegi una cuenta.'); return; }
+    if (pagadoPor === 'YO' && !estadoNuevoGasto.categoria) { alert('Elegí una categoría.'); return; }
+    if (pagadoPor === 'YO' && !estadoNuevoGasto.cuentaId) { alert('Elegí una cuenta.'); return; }
 
-    if (!estadoNuevoGasto.participantes.length) { alert('Elegi al menos un participante.'); return; }
+    if (!estadoNuevoGasto.participantes.length) { alert('Elegí al menos un participante.'); return; }
 
     var totalAsignado = estadoNuevoGasto.participantes.reduce(function(s, p) { return s + (Number(p.monto) || 0); }, 0);
     if (Math.abs(totalAsignado - monto) > 1) {
@@ -2223,7 +2223,7 @@ window.onerror = function(mensaje, url, linea, columna, error) {
     document.getElementById('tituloModalLiquidacion').textContent = transaccion.deNombre + ' \u2192 ' + transaccion.aNombre;
     document.getElementById('inputMontoLiquidacion').value = transaccion.monto;
     document.getElementById('inputFechaLiquidacion').value = new Date().toISOString().slice(0, 10);
-    document.getElementById('textoCategoriaLiquidacion').textContent = 'Elegir categoria';
+    document.getElementById('textoCategoriaLiquidacion').textContent = 'Elegir categoría';
     document.getElementById('iconoCategoriaLiquidacion').textContent = 'category';
     document.getElementById('textoCuentaLiquidacionSel').textContent = 'Elegir cuenta';
     document.getElementById('iconoCuentaLiquidacionSel').textContent = 'account_balance';
@@ -2256,12 +2256,12 @@ window.onerror = function(mensaje, url, linea, columna, error) {
 
   document.getElementById('btnConfirmarLiquidacion').addEventListener('click', function() {
     var monto = parsearMonto(document.getElementById('inputMontoLiquidacion').value);
-    if (!monto || monto <= 0) { alert('Ingresa un monto valido.'); return; }
+    if (!monto || monto <= 0) { alert('Ingresa un monto válido.'); return; }
     if (liquidacionActual.dePersonaId === 'YO' && !liquidacionActual.categoriaElegida) {
-      alert('Elegi una categoria.');
+      alert('Elegí una categoría.');
       return;
     }
-    if (!liquidacionActual.cuentaId) { alert('Elegi una cuenta.'); return; }
+    if (!liquidacionActual.cuentaId) { alert('Elegí una cuenta.'); return; }
 
     var datos = {
       grupoId: grupoActualId,
