@@ -7,7 +7,7 @@
 // de Apps Script (Implementar -> Administrar implementaciones -> copiar
 // la URL que termina en /exec).
 // =====================================================================
-var APPS_SCRIPT_API_URL = 'https://script.google.com/macros/s/AKfycbxhDZ-P5RrJcgPrJVGfagZ8-S-44LQS49gNufhjwMROdFy9YNq974TGfilkucU9guvgpQ/exec';
+var APPS_SCRIPT_API_URL = 'PEGA_ACA_TU_URL_DE_APPS_SCRIPT/exec';
 
 function _crearLlamadaApi() {
   var successHandler = null;
